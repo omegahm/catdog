@@ -90,8 +90,29 @@ If the reserve tile completes an animal, you get a reserve action as usual.
 
 ## Game end and scoring
 
-The game ends when you draw from the bag, but cannot draw two tiles from the bag.
+### Game end
 
-The purpose of the game is to make the most of each length of cats or dogs.
-That is, if, at the end, player 1 has two cats of length 3, they will score the length 3 point.
+The game ends at once when one of these happens:
+
+- You draw from the bag, but the bag holds fewer than two tiles. You do not draw. This is true also when you have a reserve tile: you may choose to draw and end the game.
+- You draw two tiles, and neither tile has a legal placement with any face up and any rotation.
+
+If only one of the two drawn tiles has a legal placement, you must place that tile.
+You may not play your reserve tile if it has no legal placement. You must then draw from the bag.
+After the draw, you may not change your choice and play your reserve tile.
+The opponent does not get a last turn.
+
+### Scoring
+
+Only complete animals score. Open animals score nothing.
+
+Each length is its own category. For each length, the player with more complete animals of that length scores 1 point.
+If both players have the same number of animals of a length, no one scores that length.
+
+Example: player 1 has cats of length 3, 3 and 5. Player 2 has dogs of length 3 and 4. Player 1 scores length 3 and length 5. Player 2 scores length 4. Player 1 wins 2–1.
+
 Most points win.
+
+If the points are tied, compare the lengths from the longest down. The first length where one player has more animals than the other decides the winner.
+If no length is different, the game is a draw.
+If no animal is complete at the end, both players score 0 and the game is a draw.

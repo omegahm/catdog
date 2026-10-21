@@ -37,3 +37,7 @@
 **Reserve**: A place next to a player that holds 0 or 1 tile. A player may play their reserve tile instead of drawing.
 
 **Reserve action**: What a player gets once per placement that completes one or more animals: take or swap one tile from the discard pile into their reserve, or skip.
+
+**Length point**: The 1 point a player scores for a length when they have more complete animals of that length than the opponent.
+
+**Tiebreak**: When points are tied, the player who has more animals at the longest length where the counts are different wins. If no such length exists, the game is a draw.

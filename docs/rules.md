@@ -43,10 +43,19 @@ You are not allowed to place a tile, if it makes an animal with 2 heads or 2 tai
 You are not allowed to place a tile, if it closes an animal into a loop with no head and no tail.
 A head meeting a tail directly is legal.
 
+## Animals
+
+An animal is complete when it has exactly 1 head and 1 tail, with 0 or more body parts between them.
+The length of an animal is its number of parts, counted from tail to head. If the animal passes through the same tile twice, each part counts. The shortest animal is a head meeting a tail: length 2. There is no maximum length.
+
 ## Species
 
 The players do not choose if they want to play as cat or dog.
-The first completed animal will determine which animal the player is playing as.
+The player who completes the first animal plays as that animal's species. The other player plays as the other species. This does not change for the rest of the game.
+If the placement that completes the first animal completes both a cat and a dog, the player who placed the tile chooses their species.
+
+A complete animal belongs to the player who plays as its species, no matter who completed it.
+You may complete your opponent's animals, for example to stop them at a length they do not want.
 
 ## Reserve
 

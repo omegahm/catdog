@@ -26,4 +26,8 @@
 
 **Animal**: A connected chain of parts of one species, across one or more tiles. An animal is open until it is complete.
 
-**Complete animal**: An animal with exactly 1 head and 1 tail.
+**Complete animal**: An animal with exactly 1 head and 1 tail. It belongs to the player who plays as its species, no matter who completed it.
+
+**Length**: The number of parts in an animal, counted from tail to head. A tile that the animal passes through twice adds two parts.
+
+**Player species**: The species a player plays as for the whole game. It is set by the first complete animal.

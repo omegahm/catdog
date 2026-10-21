@@ -50,6 +50,10 @@
 
 **Reserve action**: What a player gets once per placement that completes one or more animals: take or swap one tile from the discard pile into their reserve, or skip.
 
+**Reserve slot**: The place on screen that shows a player's reserve tile, or that the reserve is empty. Both players see both slots.
+
+**Auto-draw**: A setting in one browser. When it is on and the player has no playable reserve tile, the browser draws for them as soon as their turn starts. It is on by default.
+
 **Length point**: The 1 point a player scores for a length when they have more complete animals of that length than the opponent.
 
 **Tiebreak**: When points are tied, the player who has more animals at the longest length where the counts are different wins. If no such length exists, the game is a draw.

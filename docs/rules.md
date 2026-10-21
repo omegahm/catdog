@@ -59,9 +59,34 @@ You may complete your opponent's animals, for example to stop them at a length t
 
 ## Reserve
 
-When you complete a cat or dog, you get to place a tile from the discard pile in a special area next to you.
-You can choose to play this tile instead of drawing from the bag on your turn.
-The rest of the tiles in the discard pile go back to the bag.
+Each player has a reserve next to them. A reserve holds 0 or 1 tile.
+The discard pile and both reserves are open. Both players can see all their tiles.
+
+### Getting a reserve tile
+
+When your placement completes one or more animals, you get one reserve action.
+This is true for any species, also for the first complete animal.
+
+The order is:
+
+1. Place your tile.
+2. Discard the tile you did not place (if you drew two tiles).
+3. Check for complete animals.
+4. Do your reserve action.
+
+In the reserve action, you may take any one tile from the discard pile and put it in your reserve.
+If your reserve already holds a tile, you swap it: your old reserve tile goes to the discard pile.
+You may also skip the reserve action.
+
+After the reserve action, all tiles left in the discard pile go back to the bag. This also happens when you skip the reserve action.
+If the discard pile is empty, the reserve action does nothing.
+
+### Playing the reserve tile
+
+On your turn, you may play your reserve tile instead of drawing from the bag.
+You do not draw and you do not discard. Your reserve is then empty.
+You may do this also when the bag holds fewer than two tiles.
+If the reserve tile completes an animal, you get a reserve action as usual.
 
 ## Game end and scoring
 

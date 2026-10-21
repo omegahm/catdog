@@ -31,3 +31,9 @@
 **Length**: The number of parts in an animal, counted from tail to head. A tile that the animal passes through twice adds two parts.
 
 **Player species**: The species a player plays as for the whole game. It is set by the first complete animal.
+
+**Discard pile**: The open stack of tiles that players drew but did not place. It goes back to the bag after each reserve action.
+
+**Reserve**: A place next to a player that holds 0 or 1 tile. A player may play their reserve tile instead of drawing.
+
+**Reserve action**: What a player gets once per placement that completes one or more animals: take or swap one tile from the discard pile into their reserve, or skip.

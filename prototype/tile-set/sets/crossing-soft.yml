@@ -1,0 +1,26 @@
+set: crossing-soft
+tiles:
+  - id: crossing-soft-01
+    front:
+      - { species: cat, kind: straight, edges: [w, e] }
+      - { species: cat, kind: straight, edges: [n, s] }
+    back:
+      - { species: cat, kind: straight, edges: [w, e] }
+  - id: crossing-soft-02
+    front:
+      - { species: dog, kind: straight, edges: [w, e] }
+      - { species: dog, kind: straight, edges: [n, s] }
+    back:
+      - { species: dog, kind: straight, edges: [w, e] }
+  - id: crossing-soft-03
+    front:
+      - { species: cat, kind: straight, edges: [w, e] }
+      - { species: dog, kind: straight, edges: [n, s] }
+    back:
+      - { species: cat, kind: straight, edges: [w, e] }
+  - id: crossing-soft-04
+    front:
+      - { species: cat, kind: straight, edges: [w, e] }
+      - { species: dog, kind: straight, edges: [n, s] }
+    back:
+      - { species: dog, kind: straight, edges: [w, e] }

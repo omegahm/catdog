@@ -1,0 +1,254 @@
+set: catnap
+tiles:
+  - id: catnap-01
+    front:
+      - { species: dog, kind: straight, edges: [w, e] }
+    back:
+      - { species: dog, kind: turn, edges: [s, e] }
+  - id: catnap-02
+    front:
+      - { species: dog, kind: straight, edges: [w, e] }
+    back:
+      - { species: dog, kind: turn, edges: [s, e] }
+  - id: catnap-03
+    front:
+      - { species: dog, kind: straight, edges: [w, e] }
+    back:
+      - { species: dog, kind: turn, edges: [s, e] }
+  - id: catnap-04
+    front:
+      - { species: dog, kind: straight, edges: [w, e] }
+    back:
+      - { species: dog, kind: turn, edges: [s, e] }
+  - id: catnap-05
+    front:
+      - { species: dog, kind: straight, edges: [w, e] }
+    back:
+      - { species: dog, kind: turn, edges: [s, e] }
+  - id: catnap-06
+    front:
+      - { species: cat, kind: straight, edges: [w, e] }
+    back:
+      - { species: cat, kind: turn, edges: [s, e] }
+  - id: catnap-07
+    front:
+      - { species: cat, kind: straight, edges: [w, e] }
+    back:
+      - { species: cat, kind: turn, edges: [s, e] }
+  - id: catnap-08
+    front:
+      - { species: cat, kind: straight, edges: [w, e] }
+    back:
+      - { species: cat, kind: turn, edges: [s, e] }
+  - id: catnap-09
+    front:
+      - { species: cat, kind: straight, edges: [w, e] }
+    back:
+      - { species: cat, kind: turn, edges: [s, e] }
+  - id: catnap-10
+    front:
+      - { species: cat, kind: straight, edges: [w, e] }
+    back:
+      - { species: cat, kind: turn, edges: [s, e] }
+  - id: catnap-11
+    front:
+      - { species: cat, kind: straight, edges: [w, e] }
+      - { species: cat, kind: head, edges: [s] }
+    back:
+      - { species: cat, kind: straight, edges: [w, e] }
+      - { species: cat, kind: tail, edges: [s] }
+  - id: catnap-12
+    front:
+      - { species: cat, kind: head, edges: [w] }
+      - { species: cat, kind: head, edges: [s] }
+    back:
+      - { species: cat, kind: tail, edges: [w] }
+      - { species: cat, kind: tail, edges: [s] }
+  - id: catnap-13
+    front:
+      - { species: dog, kind: head, edges: [w] }
+      - { species: dog, kind: head, edges: [s] }
+    back:
+      - { species: dog, kind: tail, edges: [w] }
+      - { species: dog, kind: tail, edges: [s] }
+  - id: catnap-14
+    front:
+      - { species: dog, kind: straight, edges: [w, e] }
+      - { species: dog, kind: head, edges: [s] }
+    back:
+      - { species: dog, kind: straight, edges: [w, e] }
+      - { species: dog, kind: tail, edges: [s] }
+  - id: catnap-15
+    front:
+      - { species: cat, kind: straight, edges: [w, e] }
+      - { species: dog, kind: head, edges: [s] }
+    back:
+      - { species: cat, kind: straight, edges: [w, e] }
+      - { species: dog, kind: tail, edges: [s] }
+  - id: catnap-16
+    front:
+      - { species: dog, kind: turn, edges: [n, e] }
+      - { species: cat, kind: head, edges: [s] }
+    back:
+      - { species: dog, kind: turn, edges: [n, w] }
+      - { species: cat, kind: head, edges: [s] }
+  - id: catnap-17
+    front:
+      - { species: cat, kind: turn, edges: [n, e] }
+      - { species: dog, kind: head, edges: [s] }
+    back:
+      - { species: cat, kind: turn, edges: [n, w] }
+      - { species: dog, kind: head, edges: [s] }
+  - id: catnap-18
+    front:
+      - { species: cat, kind: turn, edges: [n, e] }
+      - { species: cat, kind: head, edges: [s] }
+    back:
+      - { species: cat, kind: turn, edges: [n, w] }
+      - { species: cat, kind: head, edges: [s] }
+  - id: catnap-19
+    front:
+      - { species: dog, kind: turn, edges: [n, e] }
+      - { species: dog, kind: head, edges: [s] }
+    back:
+      - { species: dog, kind: turn, edges: [n, w] }
+      - { species: dog, kind: head, edges: [s] }
+  - id: catnap-20
+    front:
+      - { species: cat, kind: head, edges: [w] }
+      - { species: cat, kind: head, edges: [e] }
+    back:
+      - { species: cat, kind: tail, edges: [w] }
+      - { species: cat, kind: tail, edges: [e] }
+  - id: catnap-21
+    front:
+      - { species: dog, kind: head, edges: [w] }
+      - { species: dog, kind: head, edges: [e] }
+    back:
+      - { species: dog, kind: tail, edges: [w] }
+      - { species: dog, kind: tail, edges: [e] }
+  - id: catnap-22
+    front:
+      - { species: dog, kind: head, edges: [w] }
+      - { species: cat, kind: head, edges: [s] }
+    back:
+      - { species: cat, kind: head, edges: [w] }
+      - { species: dog, kind: head, edges: [s] }
+  - id: catnap-23
+    front:
+      - { species: dog, kind: turn, edges: [n, e] }
+      - { species: dog, kind: tail, edges: [s] }
+    back:
+      - { species: dog, kind: turn, edges: [n, w] }
+      - { species: dog, kind: tail, edges: [s] }
+  - id: catnap-24
+    front:
+      - { species: cat, kind: turn, edges: [n, e] }
+      - { species: dog, kind: tail, edges: [s] }
+    back:
+      - { species: cat, kind: turn, edges: [n, w] }
+      - { species: dog, kind: tail, edges: [s] }
+  - id: catnap-25
+    front:
+      - { species: dog, kind: turn, edges: [n, e] }
+      - { species: cat, kind: tail, edges: [s] }
+    back:
+      - { species: dog, kind: turn, edges: [n, w] }
+      - { species: cat, kind: tail, edges: [s] }
+  - id: catnap-26
+    front:
+      - { species: cat, kind: turn, edges: [n, e] }
+      - { species: cat, kind: tail, edges: [s] }
+    back:
+      - { species: cat, kind: turn, edges: [n, w] }
+      - { species: cat, kind: tail, edges: [s] }
+  - id: catnap-27
+    front:
+      - { species: cat, kind: head, edges: [s] }
+      - { species: cat, kind: tail, edges: [e] }
+    back:
+      - { species: cat, kind: tail, edges: [w] }
+      - { species: cat, kind: head, edges: [s] }
+  - id: catnap-28
+    front:
+      - { species: dog, kind: head, edges: [s] }
+      - { species: dog, kind: tail, edges: [e] }
+    back:
+      - { species: dog, kind: tail, edges: [w] }
+      - { species: dog, kind: head, edges: [s] }
+  - id: catnap-29
+    front:
+      - { species: dog, kind: head, edges: [s] }
+      - { species: cat, kind: tail, edges: [e] }
+    back:
+      - { species: cat, kind: tail, edges: [w] }
+      - { species: dog, kind: head, edges: [s] }
+  - id: catnap-30
+    front:
+      - { species: dog, kind: tail, edges: [n] }
+      - { species: cat, kind: head, edges: [s] }
+    back:
+      - { species: cat, kind: tail, edges: [n] }
+      - { species: dog, kind: head, edges: [s] }
+  - id: catnap-31
+    front:
+      - { species: cat, kind: tail, edges: [n] }
+      - { species: cat, kind: head, edges: [s] }
+    back:
+      - { species: cat, kind: turn, edges: [n, w] }
+      - { species: dog, kind: turn, edges: [s, e] }
+  - id: catnap-32
+    front:
+      - { species: dog, kind: head, edges: [w] }
+      - { species: cat, kind: head, edges: [e] }
+    back:
+      - { species: cat, kind: tail, edges: [w] }
+      - { species: dog, kind: tail, edges: [e] }
+  - id: catnap-33
+    front:
+      - { species: dog, kind: straight, edges: [w, e] }
+      - { species: cat, kind: head, edges: [s] }
+    back:
+      - { species: dog, kind: straight, edges: [w, e] }
+      - { species: cat, kind: tail, edges: [s] }
+  - id: catnap-34
+    front:
+      - { species: dog, kind: tail, edges: [n] }
+      - { species: dog, kind: head, edges: [s] }
+    back:
+      - { species: cat, kind: turn, edges: [n, w] }
+      - { species: dog, kind: turn, edges: [s, e] }
+  - id: catnap-35
+    front:
+      - { species: dog, kind: head, edges: [s] }
+    back:
+      - { species: dog, kind: tail, edges: [s] }
+  - id: catnap-36
+    front:
+      - { species: cat, kind: head, edges: [s] }
+    back:
+      - { species: cat, kind: tail, edges: [s] }
+  - id: catnap-37
+    front:
+      - { species: cat, kind: head, edges: [s] }
+      - { species: dog, kind: tail, edges: [e] }
+    back:
+      - { species: dog, kind: tail, edges: [w] }
+      - { species: cat, kind: head, edges: [s] }
+  - id: catnap-38
+    front:
+      - { species: cat, kind: tail, edges: [w] }
+      - { species: dog, kind: tail, edges: [s] }
+    back:
+      - { species: dog, kind: tail, edges: [w] }
+      - { species: cat, kind: tail, edges: [s] }
+  - id: catnap-39
+    front:
+      - { species: cat, kind: head, edges: [s] }
+    back:
+      - { species: cat, kind: tail, edges: [s] }
+  - id: catnap-40
+    front:
+      - { species: dog, kind: head, edges: [s] }
+    back:
+      - { species: dog, kind: tail, edges: [s] }

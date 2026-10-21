@@ -1,0 +1,23 @@
+set: crossing-hard
+tiles:
+  - id: crossing-hard-01
+    front:
+      - { species: cat, kind: straight, edges: [w, e] }
+      - { species: cat, kind: straight, edges: [n, s] }
+    back:
+      - { species: cat, kind: turn, edges: [n, w] }
+      - { species: cat, kind: turn, edges: [s, e] }
+  - id: crossing-hard-02
+    front:
+      - { species: dog, kind: straight, edges: [w, e] }
+      - { species: dog, kind: straight, edges: [n, s] }
+    back:
+      - { species: dog, kind: turn, edges: [n, w] }
+      - { species: dog, kind: turn, edges: [s, e] }
+  - id: crossing-hard-03
+    front:
+      - { species: cat, kind: straight, edges: [w, e] }
+      - { species: dog, kind: straight, edges: [n, s] }
+    back:
+      - { species: cat, kind: turn, edges: [n, w] }
+      - { species: dog, kind: turn, edges: [s, e] }

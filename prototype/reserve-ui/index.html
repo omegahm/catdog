@@ -1,0 +1,764 @@
+<title>CatDog Reserve Prototype</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700&display=swap">
+<style>
+/* PROTOTYPE, throwaway. Layout: board is the table; the reserve, bag and discard pile sit beside it (A, B) or around it (C). */
+:root {
+  --bg: #e4eaec; --surface: #d3dcdf; --line: #b5c3c8; --ink: #1c2a31; --muted: #56676f;
+  --tile: #fbfaf5; --tile-edge: #c9c2b0; --cat: #d96f12; --dog: #2a62a8;
+  --legal: #1b9460; --legal-soft: rgba(27, 148, 96, .22); --warn: #b03e2b; --gold: #a87a12; --gold-soft: rgba(168, 122, 18, .2);
+  --pill: #1c2a31; --pill-ink: #f2f6f7; --scrim: rgba(16, 23, 26, .55);
+  --display: "Bricolage Grotesque", ui-sans-serif, system-ui, sans-serif;
+  --body: ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+  --mono: ui-monospace, "SF Mono", Menlo, monospace;
+}
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) {
+  --bg: #10171a; --surface: #1a2529; --line: #2c3b41; --ink: #e2eaed; --muted: #8fa1a8;
+  --tile: #ece7d9; --tile-edge: #a39b8b; --cat: #e5801f; --dog: #3b74c0;
+  --legal: #3fcf8a; --legal-soft: rgba(63, 207, 138, .22); --warn: #ea7660; --gold: #e2b84a; --gold-soft: rgba(226, 184, 74, .2);
+  --pill: #e2eaed; --pill-ink: #10171a; --scrim: rgba(0, 0, 0, .6); color-scheme: dark;
+} }
+:root[data-theme="dark"] {
+  --bg: #10171a; --surface: #1a2529; --line: #2c3b41; --ink: #e2eaed; --muted: #8fa1a8;
+  --tile: #ece7d9; --tile-edge: #a39b8b; --cat: #e5801f; --dog: #3b74c0;
+  --legal: #3fcf8a; --legal-soft: rgba(63, 207, 138, .22); --warn: #ea7660; --gold: #e2b84a; --gold-soft: rgba(226, 184, 74, .2);
+  --pill: #e2eaed; --pill-ink: #10171a; --scrim: rgba(0, 0, 0, .6); color-scheme: dark;
+}
+[hidden] { display: none !important; }
+* { box-sizing: border-box; }
+body {
+  background: var(--bg); color: var(--ink); font-family: var(--body); margin: 0;
+  padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px));
+  padding-block: 12px 96px;
+}
+button { font: inherit; color: inherit; }
+button:focus-visible, .hand:focus-visible { outline: 3px solid var(--legal); outline-offset: 2px; }
+header { display: flex; flex-wrap: wrap; gap: 8px 16px; align-items: baseline; margin-bottom: 8px; }
+h1 { font-family: var(--display); font-weight: 700; font-size: 1.4rem; margin: 0; letter-spacing: -.01em; }
+h2 { font: 700 1.05rem/1.2 var(--display); margin: 0; }
+.stats { font-variant-numeric: tabular-nums; color: var(--muted); }
+.tools { display: flex; gap: 6px; margin-left: auto; flex-wrap: wrap; align-items: center; }
+.tools label { display: flex; gap: 4px; align-items: center; font-size: .85rem; color: var(--muted); }
+.btn { border: 1px solid var(--line); background: var(--surface); border-radius: 8px; padding: 6px 12px; cursor: pointer; }
+.btn.small { padding: 3px 8px; font-size: .8rem; }
+.btn.primary { background: var(--legal); border-color: var(--legal); color: var(--bg); font-weight: 600; }
+.btn.danger { border-color: var(--warn); color: var(--warn); }
+.btn:disabled { opacity: .4; cursor: default; }
+.turn { font: 700 .95rem/1.3 var(--display); margin: 0; }
+.turn b { padding: 1px 8px; border-radius: 99px; background: var(--ink); color: var(--bg); }
+.msg { min-height: 1.4em; margin: 0 0 10px; font-weight: 600; }
+.msg.over { color: var(--warn); }
+
+.layout { display: flex; flex-wrap: wrap; gap: 16px; align-items: flex-start; }
+.board {
+  display: grid; grid-template-columns: repeat(7, 1fr); gap: 3px; padding: 6px;
+  width: min(100%, 60vh, 540px); aspect-ratio: 1; max-width: 100%;
+  background: var(--surface); border-radius: 10px; border: 1px solid var(--line); touch-action: manipulation;
+}
+.cell { position: relative; border: 0; padding: 0; background: var(--bg); border-radius: 4px; aspect-ratio: 1; min-width: 0; cursor: default; }
+.cell.legal { background: var(--legal-soft); box-shadow: inset 0 0 0 2px var(--legal); cursor: pointer; }
+.cell.last .tile { outline: 3px solid var(--ink); outline-offset: -1px; border-radius: 5px; }
+.cell.sel, .cell.hover { box-shadow: inset 0 0 0 3px var(--ink); }
+.cell.hover-bad { box-shadow: inset 0 0 0 3px var(--warn); }
+.cell .tile { position: absolute; inset: 0; width: 100%; height: 100%; display: block; }
+.tile.ghost { opacity: .72; }
+.tile.ghost.bad { opacity: .35; filter: grayscale(1); }
+
+.side { flex: 1 1 280px; min-width: 0; display: flex; flex-direction: column; gap: 14px; }
+.hint { color: var(--muted); margin: 0; max-width: 44ch; }
+.tray { display: flex; gap: 12px; flex-wrap: wrap; align-items: flex-start; }
+.hand {
+  display: flex; flex-direction: column; align-items: center; gap: 4px; padding: 6px; width: 92px;
+  border: 2px solid transparent; background: var(--surface); border-radius: 10px; cursor: pointer; touch-action: none; user-select: none;
+}
+.hand .tile { width: 76px; height: 76px; transition: transform .15s; }
+.hand.on { border-color: var(--legal); }
+.hand.dim { opacity: .55; }
+.hand.nofit .tile { filter: grayscale(1); opacity: .5; }
+.hand.locked { cursor: default; opacity: .45; }
+.cap { font: .72rem/1.3 var(--mono); color: var(--muted); text-align: center; }
+.row { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
+.pair { display: flex; flex-direction: column; gap: 4px; }
+.pair.reserve > .faces { padding: 4px; border-radius: 12px; box-shadow: 0 0 0 2px var(--gold); }
+.pair h3, .label { font: 600 .72rem/1.2 var(--body); text-transform: uppercase; letter-spacing: .07em; color: var(--muted); margin: 0; }
+.pair .faces { display: flex; gap: 6px; }
+.floater { position: fixed; left: 0; top: 0; pointer-events: none; z-index: 60; filter: drop-shadow(0 6px 10px rgba(0,0,0,.35)); }
+.floater .tile { width: 100%; height: 100%; display: block; }
+.mini { display: flex; gap: 3px; }
+.mini .tile { width: 40px; height: 40px; }
+.mini.big .tile { width: 56px; height: 56px; }
+.mini .tile:nth-child(2) { opacity: .8; }
+
+.slot {
+  display: inline-flex; flex-direction: column; align-items: center; gap: 4px; padding: 6px; min-width: 96px; min-height: 70px;
+  border: 2px dashed var(--line); border-radius: 10px; background: transparent; justify-content: center;
+}
+.slot.full { border-style: solid; border-color: var(--gold); }
+.slot.drop { background: var(--gold-soft); border-color: var(--gold); border-style: solid; }
+.slot.preview { border-color: var(--legal); border-style: solid; background: var(--legal-soft); }
+.slot .empty { font: .75rem var(--mono); color: var(--muted); }
+.pile { display: flex; gap: 8px; flex-wrap: wrap; }
+.dtile { padding: 4px; border: 2px solid transparent; border-radius: 9px; background: var(--surface); cursor: default; touch-action: none; user-select: none; }
+.dtile.pick { cursor: pointer; border-color: var(--line); }
+.dtile.on { border-color: var(--gold); background: var(--gold-soft); }
+.dtile.out { opacity: .5; border-style: dashed; }
+.table-info { display: grid; grid-template-columns: auto 1fr; gap: 8px 12px; align-items: center; }
+
+.choice { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 10px; }
+.choice button {
+  display: flex; flex-direction: column; align-items: flex-start; gap: 6px; text-align: left; padding: 12px;
+  border: 2px solid var(--line); border-radius: 12px; background: var(--surface); cursor: pointer;
+}
+.choice button:hover:not(:disabled) { border-color: var(--ink); }
+.choice button.res { border-color: var(--gold); }
+.choice button.end { border-color: var(--warn); }
+.choice button:disabled { opacity: .45; cursor: default; }
+.choice strong { font: 700 1rem/1.2 var(--display); }
+.choice small { color: var(--muted); }
+.bagbtn {
+  display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px; width: 92px; height: 112px;
+  border: 2px solid var(--ink); border-radius: 14px 14px 22px 22px; background: var(--surface); cursor: pointer;
+}
+.bagbtn b { font: 700 1.6rem/1 var(--display); font-variant-numeric: tabular-nums; }
+.bagbtn.end { border-color: var(--warn); color: var(--warn); }
+.bagbtn:disabled { opacity: .4; cursor: default; }
+.bagbtn.glow, .slot.glow { box-shadow: 0 0 0 4px var(--legal-soft); }
+
+.scrim { position: fixed; inset: 0; background: var(--scrim); z-index: 50; display: flex; align-items: flex-end; justify-content: center; padding: 16px; padding-bottom: calc(80px + env(safe-area-inset-bottom, 0px)); }
+.sheet { background: var(--bg); color: var(--ink); border-radius: 16px; padding: 16px; width: min(560px, 100%); display: flex; flex-direction: column; gap: 12px; box-shadow: 0 12px 40px rgba(0,0,0,.4); max-height: 80vh; overflow-y: auto; }
+.peekbar { position: fixed; left: 50%; transform: translateX(-50%); bottom: calc(72px + env(safe-area-inset-bottom, 0px)); z-index: 45; }
+
+.strip { display: flex; flex-wrap: wrap; gap: 12px 18px; align-items: flex-end; padding: 10px; border-radius: 12px; background: var(--surface); width: min(100%, 540px); }
+.strip.opp { opacity: .85; }
+.strip .grp { display: flex; flex-direction: column; gap: 4px; min-width: 0; }
+.strip .who { font: 700 .9rem var(--display); align-self: center; }
+.ctable { display: flex; flex-direction: column; gap: 10px; }
+
+details.state { margin-top: 16px; }
+details.state pre { font: .75rem/1.4 var(--mono); background: var(--surface); padding: 10px; border-radius: 8px; overflow-x: auto; }
+.switcher {
+  position: fixed; left: 50%; transform: translateX(-50%); bottom: calc(14px + env(safe-area-inset-bottom, 0px)); z-index: 70;
+  display: flex; align-items: center; gap: 4px; background: var(--pill); color: var(--pill-ink);
+  border-radius: 99px; padding: 4px; box-shadow: 0 6px 20px rgba(0,0,0,.3); font: 600 .85rem var(--mono);
+}
+.switcher button { background: none; border: 0; color: inherit; padding: 8px 12px; border-radius: 99px; cursor: pointer; }
+.switcher span { padding: 0 6px; white-space: nowrap; }
+.tile .face { fill: var(--tile); stroke: var(--tile-edge); stroke-width: 1.5; }
+.tile .bd { fill: none; stroke-width: 18; }
+.tile .gap { stroke: var(--tile); stroke-width: 30; }
+.tile .tl { fill: none; stroke-width: 7; stroke-linecap: round; }
+.tile .s-c { stroke: var(--cat); } .tile .f-c { fill: var(--cat); }
+.tile .s-d { stroke: var(--dog); } .tile .f-d { fill: var(--dog); }
+.tile .eye { fill: var(--tile); }
+@media (prefers-reduced-motion: reduce) { .hand .tile { transition: none; } }
+</style>
+
+<div data-controller="switcher">
+  <header>
+    <h1>CatDog reserve</h1>
+    <span class="stats" data-stats></span>
+    <div class="tools">
+      <label><input type="checkbox" id="autodraw" onchange="game.autoDraw = this.checked; game.emit()"> Auto-draw when no choice</label>
+      <button class="btn small" type="button" id="dev-undo" onclick="game.undo()">Dev undo</button>
+      <button class="btn small" type="button" id="dev-reserve" onclick="game.devGiveReserve()">Give reserve</button>
+      <button class="btn small" type="button" id="dev-action" onclick="game.devForceAction()">Force reserve action</button>
+      <button class="btn small" type="button" id="dev-bag" onclick="game.devBagLow()">Bag to 1</button>
+      <button class="btn small" type="button" id="dev-new" onclick="game.reset()">New game</button>
+    </div>
+  </header>
+  <p class="turn" data-turn></p>
+  <p class="msg" data-msg></p>
+
+  <section data-switcher-target="variant" data-key="choose" data-name="Choose first, sheet for reserve" data-controller="choose">
+    <div class="layout">
+      <div class="board" data-choose-target="board"></div>
+      <div class="side">
+        <div data-choose-target="main"></div>
+        <div class="table-info" data-choose-target="info"></div>
+      </div>
+    </div>
+    <div data-choose-target="sheet"></div>
+  </section>
+
+  <section data-switcher-target="variant" data-key="tray" data-name="Reserve in the tray, inline action" data-controller="tray" hidden>
+    <div class="layout">
+      <div class="board" data-tray-target="board"></div>
+      <div class="side">
+        <p class="hint" data-tray-target="hint"></p>
+        <div class="tray" data-tray-target="tray"></div>
+        <div data-tray-target="action"></div>
+        <div class="table-info" data-tray-target="info"></div>
+      </div>
+    </div>
+  </section>
+
+  <section data-switcher-target="variant" data-key="table" data-name="Table: drag to and from the slots" data-controller="table" hidden>
+    <div class="ctable">
+      <div class="strip opp" data-table-target="opp"></div>
+      <div class="board" data-table-target="board"></div>
+      <div class="strip" data-table-target="mine"></div>
+      <p class="hint" data-table-target="hint"></p>
+    </div>
+  </section>
+
+  <details class="state"><summary>State</summary><pre data-state></pre></details>
+
+  <nav class="switcher" aria-label="Prototype variant">
+    <button type="button" data-action="switcher#prev" aria-label="Previous variant">&larr;</button>
+    <span data-switcher-target="label"></span>
+    <button type="button" data-action="switcher#next" aria-label="Next variant">&rarr;</button>
+  </nav>
+</div>
+
+<script src="https://unpkg.com/@hotwired/stimulus@3.2.2/dist/stimulus.umd.js"></script>
+<script>
+const TILES = [["base-01",[["d","st","we"]],[["d","tu","se"]]],["base-02",[["d","st","we"]],[["d","tu","se"]]],["base-03",[["d","st","we"]],[["d","tu","se"]]],["base-04",[["d","st","we"]],[["d","tu","se"]]],["base-05",[["d","st","we"]],[["d","tu","se"]]],["base-06",[["c","st","we"]],[["c","tu","se"]]],["base-07",[["c","st","we"]],[["c","tu","se"]]],["base-08",[["c","st","we"]],[["c","tu","se"]]],["base-09",[["c","st","we"]],[["c","tu","se"]]],["base-10",[["c","st","we"]],[["c","tu","se"]]],["base-11",[["c","st","we"],["c","he","s"]],[["c","st","we"],["c","ta","s"]]],["base-12",[["c","he","w"],["c","he","s"]],[["c","ta","w"],["c","ta","s"]]],["base-13",[["d","he","w"],["d","he","s"]],[["d","ta","w"],["d","ta","s"]]],["base-14",[["d","st","we"],["d","he","s"]],[["d","st","we"],["d","ta","s"]]],["base-15",[["c","st","we"],["d","he","s"]],[["c","st","we"],["d","ta","s"]]],["base-16",[["d","tu","ne"],["c","he","s"]],[["d","tu","nw"],["c","he","s"]]],["base-17",[["c","tu","ne"],["d","he","s"]],[["c","tu","nw"],["d","he","s"]]],["base-18",[["c","tu","ne"],["c","he","s"]],[["c","tu","nw"],["c","he","s"]]],["base-19",[["d","tu","ne"],["d","he","s"]],[["d","tu","nw"],["d","he","s"]]],["base-20",[["c","he","w"],["c","he","e"]],[["c","ta","w"],["c","ta","e"]]],["base-21",[["d","he","w"],["d","he","e"]],[["d","ta","w"],["d","ta","e"]]],["base-22",[["d","he","w"],["c","he","s"]],[["c","he","w"],["d","he","s"]]],["base-23",[["d","tu","ne"],["d","ta","s"]],[["d","tu","nw"],["d","ta","s"]]],["base-24",[["c","tu","ne"],["d","ta","s"]],[["c","tu","nw"],["d","ta","s"]]],["base-25",[["d","tu","ne"],["c","ta","s"]],[["d","tu","nw"],["c","ta","s"]]],["base-26",[["c","tu","ne"],["c","ta","s"]],[["c","tu","nw"],["c","ta","s"]]],["base-27",[["c","he","s"],["c","ta","e"]],[["c","ta","w"],["c","he","s"]]],["base-28",[["d","he","s"],["d","ta","e"]],[["d","ta","w"],["d","he","s"]]],["base-29",[["d","he","s"],["c","ta","e"]],[["c","ta","w"],["d","he","s"]]],["base-30",[["d","ta","n"],["c","he","s"]],[["c","ta","n"],["d","he","s"]]],["base-31",[["c","ta","n"],["c","he","s"]],[["c","tu","nw"],["d","tu","se"]]],["base-32",[["d","he","w"],["c","he","e"]],[["c","ta","w"],["d","ta","e"]]],["base-33",[["d","st","we"],["c","he","s"]],[["d","st","we"],["c","ta","s"]]],["base-34",[["d","ta","n"],["d","he","s"]],[["c","tu","nw"],["d","tu","se"]]],["base-35",[["d","he","s"]],[["d","ta","s"]]],["base-36",[["c","he","s"]],[["c","ta","s"]]],["base-37",[["c","he","s"],["d","ta","e"]],[["d","ta","w"],["c","he","s"]]],["base-38",[["c","ta","w"],["d","ta","s"]],[["d","ta","w"],["c","ta","s"]]],["base-39",[["c","he","s"]],[["c","ta","s"]]],["base-40",[["d","he","s"]],[["d","ta","s"]]],["base-41",[["c","st","we"],["c","st","ns"]],[["c","st","we"]]],["base-42",[["d","st","we"],["d","st","ns"]],[["d","st","we"]]],["base-43",[["c","st","we"],["d","st","ns"]],[["c","st","we"]]],["base-44",[["c","st","we"],["d","st","ns"]],[["d","st","we"]]]];
+const N = 7;
+const DIRS = { n: 0, e: 1, s: 2, w: 3 };
+const DX = [0, 1, 0, -1], DY = [-1, 0, 1, 0];
+const MID = [[50, 0], [100, 50], [50, 100], [0, 50]];
+const IN = [[0, 1], [-1, 0], [0, -1], [1, 0]];
+
+function rng(seed) {
+  return () => { seed = (seed + 0x6D2B79F5) | 0; let t = Math.imul(seed ^ (seed >>> 15), 1 | seed); t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t; return ((t ^ (t >>> 14)) >>> 0) / 4294967296; };
+}
+function orient(t, face, rot) {
+  return TILES[t][1 + face].map(([sp, k, e]) => ({ sp, k, e: [...e].map(c => (DIRS[c] + rot) % 4) }));
+}
+function sig(parts) {
+  return parts.map(p => p.sp + p.k + [...p.e].sort().join('')).sort().join('|');
+}
+function partAt(parts, d) { return parts.findIndex(p => p.e.includes(d)); }
+
+function tileSVG(parts, cls = '') {
+  let s = '';
+  const straights = parts.filter(p => p.k === 'st');
+  for (const p of parts) {
+    const c = p.sp;
+    if (p.k === 'st') {
+      const [[x1, y1], [x2, y2]] = p.e.map(d => MID[d]);
+      if (straights.length === 2 && p === straights[1]) s += `<line x1="${x1}" y1="${y1}" x2="${x2}" y2="${y2}" class="gap"/>`;
+      s += `<line x1="${x1}" y1="${y1}" x2="${x2}" y2="${y2}" class="bd s-${c}"/>`;
+    } else if (p.k === 'tu') {
+      const [[x1, y1], [x2, y2]] = p.e.map(d => MID[d]);
+      s += `<path d="M${x1} ${y1} Q50 50 ${x2} ${y2}" class="bd s-${c}"/>`;
+    } else {
+      const d = p.e[0], [mx, my] = MID[d], [vx, vy] = IN[d], px = -vy, py = vx;
+      const at = (v, q) => `${mx + vx * v + px * q} ${my + vy * v + py * q}`;
+      if (p.k === 'ta') {
+        s += `<line x1="${mx}" y1="${my}" x2="${mx + vx * 8}" y2="${my + vy * 8}" class="bd s-${c}" style="stroke-width:14"/>`;
+        s += `<path d="M${at(4, 0)} L${at(20, 0)} Q${at(34, 2)} ${at(30, 12)}" class="tl s-${c}"/>`;
+      } else {
+        s += `<line x1="${mx}" y1="${my}" x2="${mx + vx * 24}" y2="${my + vy * 24}" class="bd s-${c}"/>`;
+        for (const k of [-1, 1]) {
+          s += c === 'c'
+            ? `<polygon points="${at(32, k * 4)} ${at(32, k * 15)} ${at(48, k * 12)}" class="f-${c}"/>`
+            : `<circle cx="${mx + vx * 34 + px * k * 14}" cy="${my + vy * 34 + py * k * 14}" r="7" class="f-${c}"/>`;
+        }
+        s += `<circle cx="${mx + vx * 30}" cy="${my + vy * 30}" r="14" class="f-${c}"/>`;
+        for (const k of [-1, 1]) s += `<circle cx="${mx + vx * 33 + px * k * 5}" cy="${my + vy * 33 + py * k * 5}" r="2.6" class="eye"/>`;
+      }
+    }
+  }
+  return `<svg viewBox="0 0 100 100" class="tile ${cls}" aria-hidden="true"><rect x="1" y="1" width="98" height="98" rx="6" class="face"/>${s}</svg>`;
+}
+const P = ['P1', 'P2'];
+const name = t => TILES[t][0];
+const miniHTML = (t, big) => `<span class="mini${big ? ' big' : ''}">${tileSVG(orient(t, 0, 0))}${tileSVG(orient(t, 1, 0))}</span>`;
+
+class Game {
+  constructor() { this.autoDraw = false; this.reset(); }
+  emit() { document.dispatchEvent(new CustomEvent('game:change')); }
+  shuffle(a) { for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(this.rand() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; } }
+  reset() {
+    this.seed = Math.floor(Math.random() * 1e6);
+    this.rand = rng(this.seed);
+    this.board = Array(N * N).fill(null);
+    this.bag = TILES.map((_, i) => i);
+    this.shuffle(this.bag);
+    this.history = []; this.msg = ''; this.over = ''; this.last = null; this.completed = [];
+    this.turn = 0; this.hand = []; this.discard = []; this.reserves = [null, null]; this.news = [];
+    for (let k = 0; k < 7; k++) {
+      const t = this.bag.pop(), opts = this.optionsFor(t);
+      if (opts.length) { const o = opts[Math.floor(this.rand() * opts.length)]; this.put(t, o.face, o.rot, o.i); } else this.bag.unshift(t);
+    }
+    this.last = null;
+    this.reserves = [this.bag.pop(), this.bag.pop()];
+    this.discard = [this.bag.pop(), this.bag.pop(), this.bag.pop()];
+    this.msg = 'Example start: both players hold a reserve tile and the discard pile holds 3 tiles.';
+    this.startTurn();
+    this.emit();
+  }
+  cell(x, y) { return (x < 0 || y < 0 || x >= N || y >= N) ? undefined : this.board[y * N + x]; }
+  empty() { return this.board.every(c => c === null); }
+  legal(t, face, rot, i) {
+    if (this.board[i] !== null) return false;
+    const x = i % N, y = Math.floor(i / N), parts = orient(t, face, rot);
+    let touches = false;
+    for (let d = 0; d < 4; d++) {
+      const nb = this.cell(x + DX[d], y + DY[d]), a = partAt(parts, d);
+      if (nb === undefined) { if (a >= 0) return false; continue; }
+      if (nb === null) continue;
+      touches = true;
+      const b = partAt(nb.parts, (d + 2) % 4);
+      if ((a >= 0) !== (b >= 0)) return false;
+      if (a >= 0 && parts[a].sp !== nb.parts[b].sp) return false;
+    }
+    if (!touches && !this.empty()) return false;
+    this.board[i] = { t, face, rot, parts };
+    let ok = true;
+    for (let p = 0; p < parts.length && ok; p++) {
+      const c = this.component(i, p);
+      if (c.heads > 1 || c.tails > 1 || (c.heads + c.tails === 0 && c.open === 0)) ok = false;
+    }
+    this.board[i] = null;
+    return ok;
+  }
+  component(i, p) {
+    const seen = new Set(), stack = [[i, p]];
+    let heads = 0, tails = 0, open = 0;
+    while (stack.length) {
+      const [ci, pi] = stack.pop(), key = ci + ':' + pi;
+      if (seen.has(key)) continue;
+      seen.add(key);
+      const part = this.board[ci].parts[pi];
+      if (part.k === 'he') heads++;
+      if (part.k === 'ta') tails++;
+      for (const d of part.e) {
+        const nb = this.cell(ci % N + DX[d], Math.floor(ci / N) + DY[d]);
+        if (nb === null) { open++; continue; }
+        if (!nb) continue;
+        const j = partAt(nb.parts, (d + 2) % 4);
+        if (j >= 0) stack.push([ci + DX[d] + DY[d] * N, j]);
+      }
+    }
+    return { heads, tails, open, size: seen.size, keys: [...seen], sp: this.board[i].parts[p].sp };
+  }
+  legalCells(t, face, rot) {
+    const s = new Set();
+    for (let i = 0; i < N * N; i++) if (this.legal(t, face, rot, i)) s.add(i);
+    return s;
+  }
+  optionsFor(t) {
+    const out = [], seenSig = new Set();
+    for (let face = 0; face < 2; face++) for (let rot = 0; rot < 4; rot++) {
+      const g = sig(orient(t, face, rot));
+      if (seenSig.has(g)) continue;
+      seenSig.add(g);
+      for (let i = 0; i < N * N; i++) if (this.legal(t, face, rot, i)) out.push({ t, face, rot, i });
+    }
+    return out;
+  }
+  fitsTile(t) { return t !== null && t !== undefined && this.optionsFor(t).length > 0; }
+  faceFits(t, f) { for (let r = 0; r < 4; r++) if (this.legalCells(t, f, r).size) return true; return false; }
+  get reserve() { return this.reserves[this.turn]; }
+  get oppReserve() { return this.reserves[1 - this.turn]; }
+  get canPlayReserve() { return this.phase === 'awaiting_draw' && this.fitsTile(this.reserve); }
+  get drawEnds() { return this.bag.length < 2; }
+  snapshot() { return JSON.stringify({ board: this.board, bag: this.bag, discard: this.discard, hand: this.hand, reserves: this.reserves, turn: this.turn, phase: this.phase, news: this.news, completed: this.completed, last: this.last, over: this.over, msg: this.msg }); }
+  save() { this.history.push(this.snapshot()); }
+  undo() { const s = this.history.pop(); if (!s) return; Object.assign(this, JSON.parse(s)); this.msg = 'Undone (dev only: the real game has no undo).'; this.emit(); }
+  startTurn() {
+    this.phase = 'awaiting_draw'; this.hand = []; this.news = [];
+    if (this.autoDraw && !this.fitsTile(this.reserve)) this.draw(true);
+  }
+  draw(auto) {
+    if (this.phase !== 'awaiting_draw') return;
+    if (!auto) this.save();
+    if (this.drawEnds) { this.end(`${P[this.turn]} draws, but the bag holds ${this.bag.length}: the game ends.`); return this.emit(); }
+    this.hand = [this.bag.pop(), this.bag.pop()];
+    this.phase = 'awaiting_place';
+    if (!this.fitsTile(this.hand[0]) && !this.fitsTile(this.hand[1])) this.end('Neither drawn tile fits: the game ends.');
+    else if (auto) this.msg = (this.msg ? this.msg + ' ' : '') + `${P[this.turn]} has no playable reserve: drew 2 automatically.`;
+    if (!auto) this.emit();
+  }
+  end(why) { this.phase = 'ended'; this.over = why; }
+  put(t, face, rot, i) { this.board[i] = { t, face, rot, parts: orient(t, face, rot) }; this.last = i; }
+  place(h, face, rot, i) {
+    const t = this.hand[h];
+    if (this.phase !== 'awaiting_place' || !this.legal(t, face, rot, i)) return false;
+    this.save();
+    this.put(t, face, rot, i);
+    if (this.hand.length > 1) this.discard.push(this.hand[1 - h]);
+    this.hand = [];
+    this.afterPlace(i, name(t));
+  }
+  placeReserve(face, rot, i) {
+    const t = this.reserve;
+    if (!this.canPlayReserve || !this.legal(t, face, rot, i)) return false;
+    this.save();
+    this.reserves[this.turn] = null;
+    this.put(t, face, rot, i);
+    this.afterPlace(i, name(t) + ' from the reserve');
+  }
+  afterPlace(i, what) {
+    const done = new Set(), news = [];
+    this.board[i].parts.forEach((_, p) => {
+      const c = this.component(i, p);
+      if (c.heads === 1 && c.tails === 1 && !c.keys.some(k => done.has(k))) { c.keys.forEach(k => done.add(k)); news.push(c); }
+    });
+    this.news = news.map(c => `${c.sp === 'c' ? 'Cat' : 'Dog'} complete, length ${c.size}.`);
+    news.forEach(c => this.completed.push({ by: P[this.turn], species: c.sp === 'c' ? 'cat' : 'dog', length: c.size }));
+    this.msg = `${P[this.turn]} placed ${what}. ` + this.news.join(' ');
+    if (news.length && this.discard.length) { this.phase = 'awaiting_reserve_action'; return this.emit(); }
+    if (news.length) this.msg += ' The discard pile is empty, so the reserve action does nothing.';
+    this.endTurn();
+  }
+  reserveAction(k) {
+    if (this.phase !== 'awaiting_reserve_action') return;
+    this.save();
+    if (k === null) this.msg = `${P[this.turn]} skipped the reserve action.`;
+    else {
+      const t = this.discard.splice(k, 1)[0], old = this.reserves[this.turn];
+      if (old !== null) this.discard.push(old);
+      this.reserves[this.turn] = t;
+      this.msg = old !== null ? `${P[this.turn]} swapped ${name(old)} for ${name(t)}.` : `${P[this.turn]} took ${name(t)} into the reserve.`;
+    }
+    if (this.discard.length) this.msg += ` ${this.discard.length} discarded tile${this.discard.length > 1 ? 's' : ''} went back to the bag.`;
+    this.bag.push(...this.discard);
+    this.shuffle(this.bag);
+    this.discard = [];
+    this.endTurn();
+  }
+  endTurn() { this.turn ^= 1; this.startTurn(); this.emit(); }
+  devGiveReserve() { if (this.bag.length) { this.reserves[this.turn] = this.bag.pop(); this.msg = `Dev: ${P[this.turn]} got ${name(this.reserve)} in the reserve.`; this.emit(); } }
+  devForceAction() {
+    if (this.phase === 'ended') return;
+    if (!this.discard.length) this.discard = [this.bag.pop(), this.bag.pop()];
+    if (this.hand.length) { this.discard.push(...this.hand); this.hand = []; }
+    this.phase = 'awaiting_reserve_action'; this.news = ['(Dev: forced completion.)']; this.msg = 'Dev: reserve action forced.';
+    this.emit();
+  }
+  devBagLow() { while (this.bag.length > 1) this.bag.pop(); this.msg = 'Dev: the bag now holds 1 tile.'; this.emit(); }
+}
+
+function boardHTML(ctrl, { legal = new Set(), ghost = null, selected = null } = {}) {
+  let h = '';
+  for (let i = 0; i < N * N; i++) {
+    const t = game.board[i], cls = ['cell'];
+    if (legal.has(i)) cls.push('legal');
+    if (i === game.last) cls.push('last');
+    if (i === selected) cls.push('sel');
+    const inner = t ? tileSVG(t.parts) : (ghost && ghost.i === i ? tileSVG(ghost.parts, 'ghost' + (ghost.bad ? ' bad' : '')) : '');
+    h += `<button type="button" class="cell ${cls.join(' ')}" data-idx="${i}" data-action="click->${ctrl}#cell" data-${ctrl}-idx-param="${i}" aria-label="Cell ${i % N + 1},${Math.floor(i / N) + 1}">${inner}</button>`;
+  }
+  return h;
+}
+function slotHTML(t, extra = '', attrs = '') {
+  return `<div class="slot ${t !== null ? 'full' : ''} ${extra}" ${attrs}>${t !== null ? miniHTML(t) + `<span class="cap">${name(t)}</span>` : '<span class="empty">empty</span>'}</div>`;
+}
+function infoHTML() {
+  return `<span class="label">Your reserve</span><div>${slotHTML(game.reserve)}</div>
+    <span class="label">Opponent</span><div>${slotHTML(game.oppReserve)}</div>
+    <span class="label">Discard</span><div class="pile">${game.discard.map(t => `<span class="dtile">${miniHTML(t)}</span>`).join('') || '<span class="cap">empty</span>'}</div>`;
+}
+function showState(ui) {
+  document.querySelector('[data-stats]').textContent = `Bag ${game.bag.length} · Discard ${game.discard.length} · Seed ${game.seed}`;
+  document.querySelector('[data-turn]').innerHTML = game.phase === 'ended' ? 'Game over' : `<b>${P[game.turn]}</b> to play · ${game.phase.replace(/_/g, ' ')} <span class="stats">(both seats on one screen in this prototype)</span>`;
+  const m = document.querySelector('[data-msg]');
+  m.textContent = game.over || game.msg;
+  m.classList.toggle('over', !!game.over);
+  document.getElementById('dev-undo').disabled = !game.history.length;
+  document.querySelector('[data-state]').textContent = JSON.stringify({
+    ui, phase: game.phase, turn: P[game.turn], hand: game.hand.map(name),
+    reserves: { P1: game.reserves[0] === null ? null : name(game.reserves[0]), P2: game.reserves[1] === null ? null : name(game.reserves[1]) },
+    discard: game.discard.map(name), bag: game.bag.length, canPlayReserve: game.canPlayReserve, drawEnds: game.drawEnds, completed: game.completed, over: game.over || null,
+  }, null, 2);
+}
+
+const app = Stimulus.Application.start();
+
+class Variant extends Stimulus.Controller {
+  connect() {
+    this.onChange = () => { this.resetUI(); this.render(); };
+    this.onRefresh = () => this.render();
+    this.onKey = e => this.key(e);
+    document.addEventListener('game:change', this.onChange);
+    document.addEventListener('ui:refresh', this.onRefresh);
+    document.addEventListener('keydown', this.onKey);
+    this.resetUI();
+    this.render();
+  }
+  disconnect() {
+    document.removeEventListener('game:change', this.onChange);
+    document.removeEventListener('ui:refresh', this.onRefresh);
+    document.removeEventListener('keydown', this.onKey);
+  }
+  get active() { return !this.element.hidden; }
+  resetUI() { this.rot = {}; this.sel = null; this.target = null; this.p = null; this.pick = null; this.extraReset(); }
+  extraReset() {}
+  items() { return game.phase === 'awaiting_place' ? game.hand.map((t, h) => ({ k: 'd' + h, t })) : []; }
+  item(k) { return this.items().find(x => x.k === k); }
+  r(k, f) { return this.rot[k + f] || 0; }
+  turnFace(k, f) { this.rot[k + f] = (this.r(k, f) + 1) % 4; }
+  same(a, b) { return a && b && a.k === b.k && a.f === b.f; }
+  legalFor(s) { const it = this.item(s.k); return it ? game.legalCells(it.t, s.f, this.r(s.k, s.f)) : new Set(); }
+  boardState() {
+    const s = this.p && this.p.moved ? this.p : this.sel;
+    const legal = s ? this.legalFor(s) : new Set();
+    const it = this.sel && this.item(this.sel.k);
+    const ghost = !this.p && it && this.target !== null ? { i: this.target, parts: orient(it.t, this.sel.f, this.r(this.sel.k, this.sel.f)), bad: !legal.has(this.target) } : null;
+    return { legal, ghost, selected: this.p ? null : this.target };
+  }
+  facesHTML(it, title, cls = '', locked = false) {
+    const id = this.identifier;
+    return `<div class="pair ${cls}"><h3>${title}</h3><div class="faces">${[0, 1].map(f => {
+      const fits = game.faceFits(it.t, f), on = this.same(this.sel, { k: it.k, f });
+      const c = ['hand', on ? 'on' : '', this.sel && !on ? 'dim' : '', fits ? '' : 'nofit', locked ? 'locked' : ''].join(' ');
+      const act = locked ? '' : ` data-action="pointerdown->${id}#down"`;
+      return `<div class="${c}" tabindex="${locked ? -1 : 0}" data-k="${it.k}" data-f="${f}"${act}>${tileSVG(orient(it.t, f, locked ? 0 : this.r(it.k, f)))}<span class="cap">${f ? 'back' : 'front'}${fits || locked ? '' : '<br>no spot'}</span></div>`;
+    }).join('')}</div></div>`;
+  }
+  down(e) {
+    if (e.button > 0) return;
+    e.preventDefault();
+    const d = e.currentTarget.dataset;
+    this.p = { k: d.k, f: +d.f, x: e.clientX, y: e.clientY, touch: e.pointerType !== 'mouse', moved: false, hover: null };
+    this.mv = ev => this.move(ev);
+    this.up = ev => this.end(ev);
+    window.addEventListener('pointermove', this.mv);
+    window.addEventListener('pointerup', this.up);
+    window.addEventListener('pointercancel', this.up);
+  }
+  move(ev) {
+    const p = this.p;
+    if (!p) return;
+    if (!p.moved && Math.hypot(ev.clientX - p.x, ev.clientY - p.y) < 8) return;
+    if (!p.moved) {
+      p.moved = true;
+      p.legal = this.legalFor(p);
+      this.render();
+      p.size = this.boardTarget.querySelector('.cell').getBoundingClientRect().width;
+      p.el = document.createElement('div');
+      p.el.className = 'floater';
+      p.el.style.width = p.el.style.height = p.size + 'px';
+      p.el.innerHTML = tileSVG(orient(this.item(p.k).t, p.f, this.r(p.k, p.f)));
+      document.body.appendChild(p.el);
+    }
+    const off = p.touch ? p.size * 1.1 : 0, cx = ev.clientX, cy = ev.clientY - off;
+    p.el.style.transform = `translate(${cx - p.size / 2}px, ${cy - p.size / 2}px)`;
+    const cell = document.elementFromPoint(cx, cy)?.closest('.cell');
+    const idx = cell && this.boardTarget.contains(cell) ? +cell.dataset.idx : null;
+    if (idx !== p.hover) {
+      this.boardTarget.querySelectorAll('.hover,.hover-bad').forEach(c => c.classList.remove('hover', 'hover-bad'));
+      if (cell && idx !== null && !game.board[idx]) cell.classList.add(p.legal.has(idx) ? 'hover' : 'hover-bad');
+      p.hover = idx;
+    }
+  }
+  end() {
+    window.removeEventListener('pointermove', this.mv);
+    window.removeEventListener('pointerup', this.up);
+    window.removeEventListener('pointercancel', this.up);
+    const p = this.p;
+    this.p = null;
+    if (!p) return;
+    if (!p.moved) {
+      if (this.same(this.sel, p)) this.turnFace(p.k, p.f);
+      else { this.sel = { k: p.k, f: p.f }; this.target = null; }
+      return this.render();
+    }
+    p.el.remove();
+    if (p.hover !== null && p.legal.has(p.hover)) this.commit(p.k, p.f, this.r(p.k, p.f), p.hover);
+    else this.render();
+  }
+  cell({ params: { idx } }) {
+    if (!this.sel || game.board[idx]) return;
+    const legal = this.legalFor(this.sel).has(idx);
+    if (this.target === idx && legal) return this.place();
+    this.target = legal ? idx : null;
+    this.render();
+  }
+  place() {
+    if (!this.sel || this.target === null) return;
+    this.commit(this.sel.k, this.sel.f, this.r(this.sel.k, this.sel.f), this.target);
+  }
+  commit(k, f, rot, i) { if (k === 'r') game.placeReserve(f, rot, i); else game.place(+k.slice(1), f, rot, i); }
+  key(e) {
+    if (!this.active || e.target.closest('input,textarea,[contenteditable]')) return;
+    if ((e.key === 'r' || e.key === 'R') && this.sel) { this.turnFace(this.sel.k, this.sel.f); this.render(); }
+    else if (e.key === 'Enter' && this.target !== null) { e.preventDefault(); this.place(); }
+  }
+  placeHint() {
+    const s = this.boardState();
+    return !this.sel ? 'Tap a face to see where it fits, or drag it onto the board. Tap a face again to rotate it.'
+      : this.target === null ? `${s.legal.size} green cells fit this way. Tap the face to rotate, tap a cell to preview, or drag.`
+      : s.ghost && s.ghost.bad ? 'This way does not fit here. Rotate the face, or tap another cell.'
+      : 'Tap the cell again, or press Enter.';
+  }
+}
+
+class ChooseController extends Variant {
+  static targets = ['board', 'main', 'info', 'sheet'];
+  extraReset() { this.useReserve = false; this.peek = false; }
+  items() { return this.useReserve && game.canPlayReserve ? [{ k: 'r', t: game.reserve }] : super.items(); }
+  render() {
+    this.boardTarget.innerHTML = boardHTML('choose', this.boardState());
+    this.infoTarget.innerHTML = infoHTML();
+    let h = '';
+    if (game.phase === 'awaiting_draw' && !this.useReserve) {
+      const r = game.reserve, fits = game.canPlayReserve;
+      h = `<h2>Draw or play your reserve?</h2><div class="choice">
+        <button type="button" class="${game.drawEnds ? 'end' : ''}" data-action="choose#draw"><strong>${game.drawEnds ? 'Draw and end the game' : 'Draw 2 tiles'}</strong><small>${game.drawEnds ? `The bag holds ${game.bag.length}. Drawing ends the game at once.` : `The bag holds ${game.bag.length}. You place one and discard the other.`}</small></button>
+        <button type="button" class="res" data-action="choose#reserve" ${fits ? '' : 'disabled'}><strong>Play reserve</strong>${r !== null ? miniHTML(r, true) : ''}<small>${r === null ? 'Your reserve is empty.' : fits ? 'No draw, no discard. Your reserve is then empty.' : 'This tile has no legal spot. You must draw.'}</small></button>
+      </div>`;
+    } else if (this.useReserve && game.phase === 'awaiting_draw') {
+      h = `<div class="tray">${this.facesHTML({ k: 'r', t: game.reserve }, 'Your reserve tile', 'reserve')}</div>
+        <p class="hint">${this.placeHint()}</p>
+        <div class="row"><button type="button" class="btn" data-action="choose#back">Draw instead</button></div>`;
+    } else if (game.phase === 'awaiting_place') {
+      h = `<div class="tray">${game.hand.map((t, i) => this.facesHTML({ k: 'd' + i, t }, `Tile ${i + 1} · ${name(t)}`)).join('')}</div><p class="hint">${this.placeHint()}</p>`;
+    } else if (game.phase === 'awaiting_reserve_action') {
+      h = `<p class="hint">Reserve action in progress.</p>`;
+    }
+    this.mainTarget.innerHTML = h;
+    this.sheetTarget.innerHTML = game.phase === 'awaiting_reserve_action' ? this.sheetHTML() : '';
+    if (this.active) showState({ variant: 'choose', useReserve: this.useReserve, selected: this.sel, target: this.target, sheetPick: this.pick });
+  }
+  sheetHTML() {
+    if (this.peek) return `<div class="peekbar"><button type="button" class="btn primary" data-action="choose#unpeek">Back to the reserve action</button></div>`;
+    const k = this.pick, old = game.reserve;
+    const verb = k === null ? 'Choose a tile' : old !== null ? `Swap: take ${name(game.discard[k])}, ${name(old)} goes to the pile` : `Take ${name(game.discard[k])}`;
+    return `<div class="scrim"><div class="sheet" role="dialog" aria-label="Reserve action">
+      <h2>Reserve action</h2>
+      <p class="hint">${game.news.join(' ')} Take one tile from the discard pile into your reserve, or skip. After this, the discard pile goes back to the bag.</p>
+      <div class="pile">${game.discard.map((t, i) => `<button type="button" class="dtile pick ${i === k ? 'on' : ''}" data-action="choose#pickTile" data-choose-i-param="${i}" aria-label="${name(t)}">${miniHTML(t, true)}<div class="cap">${name(t)}</div></button>`).join('')}</div>
+      <div class="row"><span class="label">Your reserve now</span>${slotHTML(old, k !== null && old !== null ? 'out' : '')}${k !== null ? `<span>→</span>${slotHTML(game.discard[k], 'preview')}` : ''}</div>
+      <div class="row"><button type="button" class="btn primary" data-action="choose#confirm" ${k === null ? 'disabled' : ''}>${verb}</button><button type="button" class="btn" data-action="choose#skip">Skip</button><button type="button" class="btn" data-action="choose#peekBoard">Look at the board</button></div>
+    </div></div>`;
+  }
+  draw() { game.draw(); }
+  reserve() { this.useReserve = true; this.sel = { k: 'r', f: 0 }; this.render(); }
+  back() { this.useReserve = false; this.sel = null; this.target = null; game.draw(); }
+  pickTile({ params: { i } }) { this.pick = i; this.render(); }
+  confirm() { if (this.pick !== null) game.reserveAction(this.pick); }
+  skip() { game.reserveAction(null); }
+  peekBoard() { this.peek = true; this.render(); }
+  unpeek() { this.peek = false; this.render(); }
+}
+
+class TrayController extends Variant {
+  static targets = ['board', 'tray', 'action', 'info', 'hint'];
+  items() { return game.canPlayReserve ? [{ k: 'r', t: game.reserve }] : super.items(); }
+  render() {
+    this.boardTarget.innerHTML = boardHTML('tray', this.boardState());
+    const r = game.reserve;
+    let tray = '';
+    if (game.phase === 'awaiting_draw') {
+      if (r !== null) tray += game.canPlayReserve ? this.facesHTML({ k: 'r', t: r }, 'Your reserve', 'reserve') : this.facesHTML({ k: 'r', t: r }, 'Reserve · no spot', 'reserve', true);
+      tray += `<div class="pair"><h3>Bag</h3><button type="button" class="bagbtn ${game.drawEnds ? 'end' : ''}" data-action="tray#draw"><b>${game.bag.length}</b><span class="cap">${game.drawEnds ? 'Draw = end game' : 'Draw 2'}</span></button></div>`;
+    } else if (game.phase === 'awaiting_place') {
+      tray += game.hand.map((t, i) => this.facesHTML({ k: 'd' + i, t }, `Tile ${i + 1} · ${name(t)}`)).join('');
+      if (r !== null) tray += this.facesHTML({ k: 'r', t: r }, 'Reserve · kept', 'reserve', true);
+    }
+    this.trayTarget.innerHTML = tray;
+    this.hintTarget.textContent = game.phase === 'awaiting_draw'
+      ? (game.canPlayReserve ? 'Place a reserve face like any drawn tile, or tap the bag to draw. Placing the reserve tile is your choice; nothing else to confirm.' : 'Tap the bag to draw.') + (this.sel ? ' ' + this.placeHint() : '')
+      : game.phase === 'awaiting_place' ? this.placeHint() : game.phase === 'awaiting_reserve_action' ? 'Reserve action: tap a discarded tile, tap it again to take it.' : '';
+    const k = this.pick;
+    this.actionTarget.innerHTML = game.phase === 'awaiting_reserve_action' ? `<div class="pair"><h3>Reserve action · ${game.news.join(' ')}</h3>
+      <div class="pile">${game.discard.map((t, i) => `<button type="button" class="dtile pick ${i === k ? 'on' : ''}" data-action="tray#pickTile" data-tray-i-param="${i}" aria-label="${name(t)}">${miniHTML(t, true)}<div class="cap">${i === k ? (r !== null ? 'tap: swap' : 'tap: take') : name(t)}</div></button>`).join('')}</div>
+      <div class="row">${k !== null ? `<button type="button" class="btn primary" data-action="tray#confirm">${r !== null ? `Swap for ${name(r)}` : 'Take into reserve'}</button>` : ''}<button type="button" class="btn" data-action="tray#skip">Skip</button></div></div>` : '';
+    this.infoTarget.innerHTML = infoHTML();
+    if (this.active) showState({ variant: 'tray', selected: this.sel, target: this.target, actionPick: k });
+  }
+  draw() { game.draw(); }
+  pickTile({ params: { i } }) { if (this.pick === i) return game.reserveAction(i); this.pick = i; this.render(); }
+  confirm() { if (this.pick !== null) game.reserveAction(this.pick); }
+  skip() { game.reserveAction(null); }
+}
+
+class TableController extends Variant {
+  static targets = ['board', 'opp', 'mine', 'hint'];
+  items() { return game.canPlayReserve ? [{ k: 'r', t: game.reserve }] : super.items(); }
+  render() {
+    this.boardTarget.innerHTML = boardHTML('table', this.boardState());
+    const ph = game.phase, r = game.reserve, k = this.pick;
+    this.oppTarget.innerHTML = `<span class="who">${P[1 - game.turn]}</span><div class="grp"><span class="label">Reserve</span>${slotHTML(game.oppReserve)}</div>`;
+    let slot;
+    if (ph === 'awaiting_draw' && game.canPlayReserve) slot = `<div class="slot full glow">${this.facesHTML({ k: 'r', t: r }, '', 'reserve')}</div>`;
+    else if (ph === 'awaiting_reserve_action') slot = slotHTML(k !== null ? game.discard[k] : r, `glow ${k !== null ? 'preview' : ''}`, 'data-drop="slot" data-action="click->table#slotTap" role="button" tabindex="0"');
+    else slot = slotHTML(r);
+    const bag = `<button type="button" class="bagbtn ${game.drawEnds ? 'end' : ''} ${ph === 'awaiting_draw' ? 'glow' : ''}" data-action="table#draw" ${ph === 'awaiting_draw' ? '' : 'disabled'}><b>${game.bag.length}</b><span class="cap">${game.drawEnds ? 'end game' : 'bag'}</span></button>`;
+    const drawn = ph === 'awaiting_place' ? `<div class="grp"><span class="label">Drawn</span><div class="tray">${game.hand.map((t, i) => this.facesHTML({ k: 'd' + i, t }, name(t))).join('')}</div></div>` : '';
+    const pickable = ph === 'awaiting_reserve_action';
+    const pile = game.discard.map((t, i) => `<span class="dtile ${pickable ? 'pick' : ''} ${i === k ? 'on' : ''}" data-i="${i}" ${pickable ? 'data-action="pointerdown->table#ddown" tabindex="0"' : ''}>${miniHTML(t)}</span>`).join('');
+    const old = pickable && k !== null && r !== null ? `<span class="dtile out">${miniHTML(r)}</span>` : '';
+    this.mineTarget.innerHTML = `<span class="who">${P[game.turn]} · you</span>
+      <div class="grp"><span class="label">Reserve</span>${slot}</div>
+      <div class="grp"><span class="label">Bag</span>${bag}</div>
+      ${drawn}
+      <div class="grp" style="flex:1 1 160px"><span class="label">Discard pile${pickable ? ' · drag one to your reserve' : ''}</span><div class="pile">${pile || '<span class="cap">empty</span>'}${old}</div>
+      ${pickable ? `<div class="row">${k !== null ? `<button type="button" class="btn primary" data-action="table#confirm">${r !== null ? 'Confirm swap' : 'Confirm take'}</button>` : ''}<button type="button" class="btn" data-action="table#skip">Skip</button></div>` : ''}</div>`;
+    this.hintTarget.textContent = ph === 'awaiting_draw' ? (game.canPlayReserve ? 'Drag a reserve face onto the board to play it, or tap the bag to draw. ' + (this.sel ? this.placeHint() : '') : 'Tap the bag to draw.')
+      : ph === 'awaiting_place' ? this.placeHint()
+      : ph === 'awaiting_reserve_action' ? `${game.news.join(' ')} Drag a discarded tile onto your reserve slot (it goes in at once), or tap a tile, then tap the slot or Confirm.` : '';
+    if (this.active) showState({ variant: 'table', selected: this.sel, target: this.target, actionPick: k });
+  }
+  draw() { game.draw(); }
+  slotTap() { if (this.pick !== null) game.reserveAction(this.pick); }
+  confirm() { if (this.pick !== null) game.reserveAction(this.pick); }
+  skip() { game.reserveAction(null); }
+  ddown(e) {
+    if (e.button > 0) return;
+    e.preventDefault();
+    const el = e.currentTarget, i = +el.dataset.i;
+    const d = { i, x: e.clientX, y: e.clientY, touch: e.pointerType !== 'mouse', moved: false, over: false };
+    const mv = ev => {
+      if (!d.moved && Math.hypot(ev.clientX - d.x, ev.clientY - d.y) < 8) return;
+      if (!d.moved) {
+        d.moved = true; d.size = 64;
+        d.el = document.createElement('div'); d.el.className = 'floater';
+        d.el.style.width = d.el.style.height = d.size + 'px';
+        d.el.innerHTML = tileSVG(orient(game.discard[i], 0, 0));
+        document.body.appendChild(d.el);
+      }
+      const cx = ev.clientX, cy = ev.clientY - (d.touch ? d.size : 0);
+      d.el.style.transform = `translate(${cx - d.size / 2}px, ${cy - d.size / 2}px)`;
+      const slot = this.mineTarget.querySelector('[data-drop="slot"]');
+      d.over = !!document.elementFromPoint(cx, cy)?.closest('[data-drop="slot"]');
+      slot && slot.classList.toggle('drop', d.over);
+    };
+    const up = () => {
+      window.removeEventListener('pointermove', mv); window.removeEventListener('pointerup', up); window.removeEventListener('pointercancel', up);
+      if (!d.moved) { this.pick = this.pick === i ? null : i; return this.render(); }
+      d.el.remove();
+      if (d.over) game.reserveAction(i); else this.render();
+    };
+    window.addEventListener('pointermove', mv); window.addEventListener('pointerup', up); window.addEventListener('pointercancel', up);
+  }
+}
+
+class SwitcherController extends Stimulus.Controller {
+  static targets = ['variant', 'label'];
+  connect() {
+    const keys = this.variantTargets.map(v => v.dataset.key);
+    let h = '';
+    try { h = location.hash.slice(1); } catch (e) {}
+    this.idx = Math.max(0, keys.indexOf(h));
+    this.onKey = e => {
+      if (e.target.closest('input,textarea,[contenteditable]')) return;
+      if (e.key === 'ArrowLeft') this.prev();
+      if (e.key === 'ArrowRight') this.next();
+    };
+    document.addEventListener('keydown', this.onKey);
+    this.show();
+  }
+  disconnect() { document.removeEventListener('keydown', this.onKey); }
+  prev() { this.idx = (this.idx + this.variantTargets.length - 1) % this.variantTargets.length; this.show(); }
+  next() { this.idx = (this.idx + 1) % this.variantTargets.length; this.show(); }
+  show() {
+    this.variantTargets.forEach((v, i) => { v.hidden = i !== this.idx; });
+    const v = this.variantTargets[this.idx];
+    this.labelTarget.textContent = `${'ABC'[this.idx]} · ${v.dataset.name}`;
+    try { history.replaceState(null, '', '#' + v.dataset.key); } catch (e) {}
+    document.dispatchEvent(new CustomEvent('ui:refresh'));
+  }
+}
+
+const game = new Game();
+app.register('choose', ChooseController);
+app.register('tray', TrayController);
+app.register('table', TableController);
+app.register('switcher', SwitcherController);
+</script>

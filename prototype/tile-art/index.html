@@ -1,0 +1,352 @@
+<title>CatDog Tile Art</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700&display=swap">
+<style>
+/* PROTOTYPE, throwaway. Four art styles for tile faces, all generated as SVG from the parts in config/tiles/base.yml. Switch with the bottom bar or ← →. */
+:root {
+  --bg: #e4eaec; --surface: #d3dcdf; --line: #b5c3c8; --ink: #1c2a31; --muted: #56676f;
+  --tile: #fbfaf5; --tile-edge: #c9c2b0;
+  --c: #d96f12; --c-dk: #8a3f00; --c-lt: #f6c48f;
+  --d: #2a62a8; --d-dk: #143a6b; --d-lt: #a9c6ea;
+  --eye: #1a1a1a; --nose: #e07a8a;
+  --pill: #1c2a31; --pill-ink: #f2f6f7;
+  --display: "Bricolage Grotesque", ui-sans-serif, system-ui, sans-serif;
+  --body: ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+  --cell: 46px;
+}
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) {
+  --bg: #10171a; --surface: #1a2529; --line: #2c3b41; --ink: #e2eaed; --muted: #8fa1a8;
+  --tile: #ece7d9; --tile-edge: #a39b8b; --pill: #e2eaed; --pill-ink: #10171a; color-scheme: dark;
+} }
+:root[data-theme="dark"] {
+  --bg: #10171a; --surface: #1a2529; --line: #2c3b41; --ink: #e2eaed; --muted: #8fa1a8;
+  --tile: #ece7d9; --tile-edge: #a39b8b; --pill: #e2eaed; --pill-ink: #10171a; color-scheme: dark;
+}
+* { box-sizing: border-box; }
+body {
+  background: var(--bg); color: var(--ink); font-family: var(--body); margin: 0;
+  padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px));
+  padding-block: 12px 96px;
+}
+h1 { font: 700 1.4rem/1.2 var(--display); margin: 0; letter-spacing: -.01em; }
+h2 { font: 700 1.05rem/1.2 var(--display); margin: 0 0 4px; }
+p.note { color: var(--muted); margin: 0 0 10px; max-width: 65ch; font-size: .9rem; }
+header { display: flex; flex-wrap: wrap; gap: 8px 16px; align-items: baseline; margin-bottom: 12px; }
+.tools { display: flex; flex-wrap: wrap; gap: 10px 14px; margin-bottom: 16px; font-size: .85rem; }
+.tools label { display: flex; gap: 6px; align-items: center; color: var(--muted); }
+select, button { font: inherit; color: inherit; }
+select, .btn { border: 1px solid var(--line); background: var(--surface); border-radius: 8px; padding: 4px 8px; }
+.btn { cursor: pointer; }
+section { margin-bottom: 24px; }
+.sheet { overflow-x: auto; }
+.sheet table { border-collapse: collapse; }
+.sheet th { font: 600 .75rem/1.2 var(--body); color: var(--muted); text-align: left; padding: 4px 8px 4px 0; letter-spacing: .04em; text-transform: uppercase; }
+.sheet td { padding: 4px 8px 8px 0; vertical-align: top; }
+.trio { display: flex; gap: 6px; align-items: flex-end; }
+.tile { display: block; }
+.tile .face { fill: var(--tile); stroke: var(--tile-edge); stroke-width: 1.5; }
+.board {
+  display: grid; grid-template-columns: repeat(7, var(--cell)); gap: 2px; padding: 4px;
+  background: var(--surface); border: 1px solid var(--line); border-radius: 8px; width: max-content; max-width: 100%;
+}
+.cell { width: var(--cell); height: var(--cell); background: var(--bg); border-radius: 3px; }
+.cell svg { width: 100%; height: 100%; }
+.tray { display: flex; flex-wrap: wrap; gap: 10px; }
+.pair { display: flex; flex-direction: column; gap: 2px; align-items: center; font-size: .7rem; color: var(--muted); font-variant-numeric: tabular-nums; }
+.pair > div { display: flex; gap: 2px; }
+.pair svg { width: calc(var(--cell) * 1.3); height: calc(var(--cell) * 1.3); }
+.switch {
+  position: fixed; left: 50%; transform: translateX(-50%); bottom: calc(14px + env(safe-area-inset-bottom, 0px));
+  display: flex; align-items: center; gap: 6px; background: var(--pill); color: var(--pill-ink);
+  border-radius: 99px; padding: 6px 8px; box-shadow: 0 6px 20px rgba(0,0,0,.3); z-index: 5; white-space: nowrap;
+}
+.switch button { background: transparent; border: 0; color: inherit; font-size: 1.1rem; width: 34px; height: 34px; border-radius: 99px; cursor: pointer; }
+.switch button:focus-visible { outline: 2px solid var(--pill-ink); }
+.switch span { font-weight: 600; min-width: 13ch; text-align: center; }
+</style>
+
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <filter id="v-prot"><feColorMatrix type="matrix" values=".567 .433 0 0 0  .558 .442 0 0 0  0 .242 .758 0 0  0 0 0 1 0"/></filter>
+  <filter id="v-deut"><feColorMatrix type="matrix" values=".625 .375 0 0 0  .7 .3 0 0 0  0 .3 .7 0 0  0 0 0 1 0"/></filter>
+  <filter id="v-trit"><feColorMatrix type="matrix" values=".95 .05 0 0 0  0 .433 .567 0 0  0 .475 .525 0 0  0 0 0 1 0"/></filter>
+  <filter id="v-grey"><feColorMatrix type="saturate" values="0"/></filter>
+</svg>
+
+<header>
+  <h1>CatDog Tile Art</h1>
+  <span class="note" id="facts"></span>
+</header>
+
+<div class="tools">
+  <label for="size">Board cell
+    <select id="size">
+      <option value="46">Phone (46 px)</option>
+      <option value="64">Tablet (64 px)</option>
+      <option value="80">Desktop (80 px)</option>
+    </select>
+  </label>
+  <label for="vision">Vision
+    <select id="vision">
+      <option value="">Normal</option>
+      <option value="v-prot">Protanopia</option>
+      <option value="v-deut">Deuteranopia</option>
+      <option value="v-trit">Tritanopia</option>
+      <option value="v-grey">Greyscale</option>
+    </select>
+  </label>
+  <button class="btn" id="reboard" type="button">New sample board</button>
+</div>
+
+<main id="view">
+  <section>
+    <h2>Parts</h2>
+    <p class="note" id="vnote"></p>
+    <div class="sheet" id="sheet"></div>
+  </section>
+  <section>
+    <h2>Sample board</h2>
+    <p class="note">A random board built from the real tile set with the edge-matching rule. Read it at phone size: can you tell cat from dog, head from tail?</p>
+    <div class="board" id="board"></div>
+  </section>
+  <section>
+    <h2>All 44 tiles</h2>
+    <p class="note">Front and back of each tile in base orientation, at tray size.</p>
+    <div class="tray" id="tray"></div>
+  </section>
+</main>
+
+<nav class="switch" aria-label="Variant">
+  <button type="button" id="prev" aria-label="Previous variant">←</button>
+  <span id="vlabel"></span>
+  <button type="button" id="next" aria-label="Next variant">→</button>
+</nav>
+
+<script>
+const TILES = [["base-01",[["d","st","we"]],[["d","tu","se"]]],["base-02",[["d","st","we"]],[["d","tu","se"]]],["base-03",[["d","st","we"]],[["d","tu","se"]]],["base-04",[["d","st","we"]],[["d","tu","se"]]],["base-05",[["d","st","we"]],[["d","tu","se"]]],["base-06",[["c","st","we"]],[["c","tu","se"]]],["base-07",[["c","st","we"]],[["c","tu","se"]]],["base-08",[["c","st","we"]],[["c","tu","se"]]],["base-09",[["c","st","we"]],[["c","tu","se"]]],["base-10",[["c","st","we"]],[["c","tu","se"]]],["base-11",[["c","st","we"],["c","he","s"]],[["c","st","we"],["c","ta","s"]]],["base-12",[["c","he","w"],["c","he","s"]],[["c","ta","w"],["c","ta","s"]]],["base-13",[["d","he","w"],["d","he","s"]],[["d","ta","w"],["d","ta","s"]]],["base-14",[["d","st","we"],["d","he","s"]],[["d","st","we"],["d","ta","s"]]],["base-15",[["c","st","we"],["d","he","s"]],[["c","st","we"],["d","ta","s"]]],["base-16",[["d","tu","ne"],["c","he","s"]],[["d","tu","nw"],["c","he","s"]]],["base-17",[["c","tu","ne"],["d","he","s"]],[["c","tu","nw"],["d","he","s"]]],["base-18",[["c","tu","ne"],["c","he","s"]],[["c","tu","nw"],["c","he","s"]]],["base-19",[["d","tu","ne"],["d","he","s"]],[["d","tu","nw"],["d","he","s"]]],["base-20",[["c","he","w"],["c","he","e"]],[["c","ta","w"],["c","ta","e"]]],["base-21",[["d","he","w"],["d","he","e"]],[["d","ta","w"],["d","ta","e"]]],["base-22",[["d","he","w"],["c","he","s"]],[["c","he","w"],["d","he","s"]]],["base-23",[["d","tu","ne"],["d","ta","s"]],[["d","tu","nw"],["d","ta","s"]]],["base-24",[["c","tu","ne"],["d","ta","s"]],[["c","tu","nw"],["d","ta","s"]]],["base-25",[["d","tu","ne"],["c","ta","s"]],[["d","tu","nw"],["c","ta","s"]]],["base-26",[["c","tu","ne"],["c","ta","s"]],[["c","tu","nw"],["c","ta","s"]]],["base-27",[["c","he","s"],["c","ta","e"]],[["c","ta","w"],["c","he","s"]]],["base-28",[["d","he","s"],["d","ta","e"]],[["d","ta","w"],["d","he","s"]]],["base-29",[["d","he","s"],["c","ta","e"]],[["c","ta","w"],["d","he","s"]]],["base-30",[["d","ta","n"],["c","he","s"]],[["c","ta","n"],["d","he","s"]]],["base-31",[["c","ta","n"],["c","he","s"]],[["c","tu","nw"],["d","tu","se"]]],["base-32",[["d","he","w"],["c","he","e"]],[["c","ta","w"],["d","ta","e"]]],["base-33",[["d","st","we"],["c","he","s"]],[["d","st","we"],["c","ta","s"]]],["base-34",[["d","ta","n"],["d","he","s"]],[["c","tu","nw"],["d","tu","se"]]],["base-35",[["d","he","s"]],[["d","ta","s"]]],["base-36",[["c","he","s"]],[["c","ta","s"]]],["base-37",[["c","he","s"],["d","ta","e"]],[["d","ta","w"],["c","he","s"]]],["base-38",[["c","ta","w"],["d","ta","s"]],[["d","ta","w"],["c","ta","s"]]],["base-39",[["c","he","s"]],[["c","ta","s"]]],["base-40",[["d","he","s"]],[["d","ta","s"]]],["base-41",[["c","st","we"],["c","st","ns"]],[["c","st","we"]]],["base-42",[["d","st","we"],["d","st","ns"]],[["d","st","we"]]],["base-43",[["c","st","we"],["d","st","ns"]],[["c","st","we"]]],["base-44",[["c","st","we"],["d","st","ns"]],[["d","st","we"]]]];
+const DIRS = { n: 0, e: 1, s: 2, w: 3 };
+const SP = { c: 'cat', d: 'dog' };
+
+const curl = (x, y) => `${x} ${y}`;
+
+const VARIANTS = {
+  A: {
+    name: 'Lines',
+    note: 'Current style from earlier prototypes. Thin coloured line bodies, small geometric heads: cat has pointed ears, dog has round ears. Species told apart by colour and ear shape only.',
+    w: 12,
+    straight: sp => `<line x1="50" y1="0" x2="50" y2="100" stroke="var(--${sp})" stroke-width="12"/>`,
+    turn: sp => `<path d="M50 100 Q50 50 100 50" fill="none" stroke="var(--${sp})" stroke-width="12"/>`,
+    head: sp => {
+      let s = `<line x1="50" y1="100" x2="50" y2="76" stroke="var(--${sp})" stroke-width="12"/>`;
+      s += sp === 'c'
+        ? `<polygon points="46 68 35 68 38 52" fill="var(--c)"/><polygon points="54 68 65 68 62 52" fill="var(--c)"/>`
+        : `<circle cx="36" cy="66" r="7" fill="var(--d)"/><circle cx="64" cy="66" r="7" fill="var(--d)"/>`;
+      s += `<circle cx="50" cy="70" r="14" fill="var(--${sp})"/><circle cx="45" cy="67" r="2.6" fill="var(--eye)"/><circle cx="55" cy="67" r="2.6" fill="var(--eye)"/>`;
+      return s;
+    },
+    tail: sp => `<line x1="50" y1="100" x2="50" y2="90" stroke="var(--${sp})" stroke-width="14"/><path d="M50 96 L50 80 Q48 66 60 70" fill="none" stroke="var(--${sp})" stroke-width="5" stroke-linecap="round"/>`,
+  },
+
+  B: {
+    name: 'Fur bands',
+    note: 'Wide bodies with a fur pattern: cat has stripes, dog has spots. Faces have detail (whiskers, snout, floppy ears). Cat tail is a long thin curl, dog tail a short thick wag. Species told apart by colour, pattern and silhouette.',
+    w: 28,
+    straight: sp => {
+      let s = `<rect x="36" y="-1" width="28" height="102" fill="var(--${sp})"/>`;
+      if (sp === 'c') for (const y of [16, 50, 84]) s += `<path d="M36 ${y - 4} Q50 ${y + 3} 64 ${y - 4}" fill="none" stroke="var(--c-dk)" stroke-width="4"/>`;
+      else s += `<circle cx="44" cy="22" r="5" fill="var(--d-dk)"/><circle cx="57" cy="50" r="6" fill="var(--d-dk)"/><circle cx="45" cy="78" r="4.5" fill="var(--d-dk)"/>`;
+      return s;
+    },
+    turn: sp => {
+      let s = `<path d="M50 101 A50 50 0 0 1 101 50" fill="none" stroke="var(--${sp})" stroke-width="28"/>`;
+      const at = (a, r) => { const t = a * Math.PI / 180; return [100 + r * Math.cos(t), 100 + r * Math.sin(t)]; };
+      if (sp === 'c') for (const a of [200, 225, 250]) { const [x1, y1] = at(a, 36), [x2, y2] = at(a + 4, 50), [x3, y3] = at(a, 64); s += `<path d="M${x1} ${y1} Q${x2} ${y2} ${x3} ${y3}" fill="none" stroke="var(--c-dk)" stroke-width="4"/>`; }
+      else for (const [a, r, rr] of [[202, 44, 5], [228, 56, 6], [256, 46, 4.5]]) { const [x, y] = at(a, r); s += `<circle cx="${x}" cy="${y}" r="${rr}" fill="var(--d-dk)"/>`; }
+      return s;
+    },
+    head: sp => {
+      let s = `<rect x="38" y="80" width="24" height="21" fill="var(--${sp})"/>`;
+      if (sp === 'c') {
+        s += `<polygon points="37 64 34 46 48 56" fill="var(--c)"/><polygon points="63 64 66 46 52 56" fill="var(--c)"/>`;
+        s += `<polygon points="38 60 37 51 44 56" fill="var(--nose)"/><polygon points="62 60 63 51 56 56" fill="var(--nose)"/>`;
+        s += `<circle cx="50" cy="70" r="17" fill="var(--c)"/>`;
+        s += `<path d="M50 53.5 L50 61 M44.5 55 L46 61 M55.5 55 L54 61" stroke="var(--c-dk)" stroke-width="2.6" stroke-linecap="round"/>`;
+        s += `<ellipse cx="44" cy="69" rx="2.4" ry="3.4" fill="var(--eye)"/><ellipse cx="56" cy="69" rx="2.4" ry="3.4" fill="var(--eye)"/>`;
+        s += `<polygon points="47.5 75 52.5 75 50 78" fill="var(--nose)"/>`;
+        s += `<path d="M42 77 L28 75 M42 80 L29 84 M58 77 L72 75 M58 80 L71 84" stroke="var(--eye)" stroke-width="1.2"/>`;
+      } else {
+        s += `<circle cx="50" cy="70" r="17" fill="var(--d)"/><circle cx="57" cy="64" r="6" fill="var(--d-dk)"/><circle cx="43" cy="58" r="3" fill="var(--d-dk)"/><circle cx="60" cy="79" r="2.5" fill="var(--d-dk)"/>`;
+        s += `<ellipse cx="33" cy="72" rx="6" ry="13" transform="rotate(18 33 72)" fill="var(--d-dk)"/><ellipse cx="67" cy="72" rx="6" ry="13" transform="rotate(-18 67 72)" fill="var(--d-dk)"/>`;
+        s += `<ellipse cx="50" cy="77" rx="9" ry="7" fill="var(--d-lt)"/><ellipse cx="50" cy="74" rx="4" ry="3" fill="var(--eye)"/>`;
+        s += `<circle cx="44" cy="65" r="2.8" fill="var(--eye)"/><circle cx="56" cy="65" r="2.8" fill="var(--eye)"/>`;
+      }
+      return s;
+    },
+    tail: sp => sp === 'c'
+      ? `<polygon points="36 101 64 101 56 84 44 84" fill="var(--c)"/><path d="M50 86 C50 66 68 64 64 50 C61 40 50 44 54 51" fill="none" stroke="var(--c)" stroke-width="8" stroke-linecap="round"/><path d="M45 72 L55 74 M53 60 L63 58" stroke="var(--c-dk)" stroke-width="3"/>`
+      : `<polygon points="36 101 64 101 60 84 40 84" fill="var(--d)"/><path d="M50 88 Q44 70 56 58" fill="none" stroke="var(--d)" stroke-width="13" stroke-linecap="round"/><circle cx="57" cy="57" r="6" fill="var(--d-lt)"/><circle cx="45" cy="94" r="3.5" fill="var(--d-dk)"/><circle cx="55" cy="88" r="2.8" fill="var(--d-dk)"/><circle cx="49" cy="74" r="3" fill="var(--d-dk)"/><path d="M66 50 Q70 56 66 62 M71 47 Q76 56 71 65" fill="none" stroke="var(--d-dk)" stroke-width="2" stroke-linecap="round"/>`,
+  },
+
+  C: {
+    name: 'Big shapes',
+    note: 'Flat, very wide bodies (half the tile) and large heads with strong silhouettes: cat ears point in, dog ears hang down. No pattern, no small detail. Bet: big shapes read best at phone size.',
+    w: 50,
+    straight: sp => `<rect x="25" y="-1" width="50" height="102" fill="var(--${sp})"/>`,
+    turn: sp => `<path d="M50 101 A50 50 0 0 1 101 50" fill="none" stroke="var(--${sp})" stroke-width="50"/>`,
+    head: sp => sp === 'c'
+      ? `<rect x="30" y="86" width="40" height="15" fill="var(--c)"/><polygon points="22 70 24 38 46 56" fill="var(--c)"/><polygon points="78 70 76 38 54 56" fill="var(--c)"/><ellipse cx="50" cy="72" rx="29" ry="20" fill="var(--c)"/><circle cx="40" cy="70" r="5.5" fill="var(--tile)"/><circle cx="60" cy="70" r="5.5" fill="var(--tile)"/><circle cx="40" cy="70" r="2.8" fill="var(--eye)"/><circle cx="60" cy="70" r="2.8" fill="var(--eye)"/>`
+      : `<rect x="30" y="86" width="40" height="15" fill="var(--d)"/><ellipse cx="50" cy="68" rx="25" ry="22" fill="var(--d)"/><path d="M28 54 Q14 66 22 90 Q32 84 32 64 Z" fill="var(--d-dk)"/><path d="M72 54 Q86 66 78 90 Q68 84 68 64 Z" fill="var(--d-dk)"/><circle cx="41" cy="64" r="5.5" fill="var(--tile)"/><circle cx="59" cy="64" r="5.5" fill="var(--tile)"/><circle cx="41" cy="64" r="2.8" fill="var(--eye)"/><circle cx="59" cy="64" r="2.8" fill="var(--eye)"/><ellipse cx="50" cy="76" rx="6" ry="4.5" fill="var(--eye)"/>`,
+    tail: sp => sp === 'c'
+      ? `<polygon points="25 101 75 101 58 76 42 76" fill="var(--c)"/><path d="M50 80 C50 56 74 58 70 40 C67 30 56 34 60 42" fill="none" stroke="var(--c)" stroke-width="14" stroke-linecap="round"/>`
+      : `<polygon points="25 101 75 101 62 44 38 44" fill="var(--d)"/><ellipse cx="50" cy="42" rx="14" ry="10" fill="var(--d)"/>`,
+  },
+
+  D: {
+    name: 'Line style',
+    note: 'Species told apart by line style, not only colour: cat is a solid line, dog is a hollow tube. Heads and tails are simple glyphs. Bet: works in greyscale and for colour-blind players.',
+    w: 18,
+    straight: sp => sp === 'c'
+      ? `<line x1="50" y1="0" x2="50" y2="100" stroke="var(--c)" stroke-width="14"/>`
+      : `<line x1="50" y1="0" x2="50" y2="100" stroke="var(--d)" stroke-width="18"/><line x1="50" y1="0" x2="50" y2="100" stroke="var(--tile)" stroke-width="7"/>`,
+    turn: sp => sp === 'c'
+      ? `<path d="M50 101 A50 50 0 0 1 101 50" fill="none" stroke="var(--c)" stroke-width="14"/>`
+      : `<path d="M50 101 A50 50 0 0 1 101 50" fill="none" stroke="var(--d)" stroke-width="18"/><path d="M50 101 A50 50 0 0 1 101 50" fill="none" stroke="var(--tile)" stroke-width="7"/>`,
+    head: sp => sp === 'c'
+      ? `<line x1="50" y1="100" x2="50" y2="80" stroke="var(--c)" stroke-width="14"/><polygon points="36 70 34 48 48 60" fill="var(--c)"/><polygon points="64 70 66 48 52 60" fill="var(--c)"/><circle cx="50" cy="70" r="16" fill="var(--c)"/><circle cx="44" cy="68" r="2.8" fill="var(--tile)"/><circle cx="56" cy="68" r="2.8" fill="var(--tile)"/>`
+      : `<line x1="50" y1="100" x2="50" y2="84" stroke="var(--d)" stroke-width="18"/><line x1="50" y1="100" x2="50" y2="84" stroke="var(--tile)" stroke-width="7"/><ellipse cx="33" cy="72" rx="5" ry="11" transform="rotate(15 33 72)" fill="var(--d)"/><ellipse cx="67" cy="72" rx="5" ry="11" transform="rotate(-15 67 72)" fill="var(--d)"/><circle cx="50" cy="70" r="15" fill="var(--tile)" stroke="var(--d)" stroke-width="5.5"/><circle cx="44.5" cy="67" r="2.8" fill="var(--d)"/><circle cx="55.5" cy="67" r="2.8" fill="var(--d)"/><ellipse cx="50" cy="75" rx="3.5" ry="2.5" fill="var(--d)"/>`,
+    tail: sp => sp === 'c'
+      ? `<line x1="50" y1="100" x2="50" y2="84" stroke="var(--c)" stroke-width="14"/><path d="M50 88 L50 70 Q50 56 62 58 Q70 60 66 68" fill="none" stroke="var(--c)" stroke-width="6" stroke-linecap="round"/>`
+      : `<line x1="50" y1="100" x2="50" y2="66" stroke="var(--d)" stroke-width="18"/><line x1="50" y1="101" x2="50" y2="66" stroke="var(--tile)" stroke-width="7"/><circle cx="50" cy="60" r="11" fill="var(--tile)" stroke="var(--d)" stroke-width="5.5"/>`,
+  },
+};
+const KEYS = Object.keys(VARIANTS);
+
+function rotFor(k, e) {
+  const ds = [...e].map(c => typeof c === 'number' ? c : DIRS[c]);
+  if (k === 'he' || k === 'ta') return (ds[0] - 2 + 4) % 4;
+  if (k === 'st') return ds.includes(0) ? 0 : 1;
+  for (let r = 0; r < 4; r++) { const a = (2 + r) % 4, b = (1 + r) % 4; if (ds.includes(a) && ds.includes(b)) return r; }
+}
+const KIND = { st: 'straight', tu: 'turn', he: 'head', ta: 'tail' };
+
+function orient(t, face, rot) {
+  return TILES[t][1 + face].map(([sp, k, e]) => ({ sp, k, e: [...e].map(c => (DIRS[c] + rot) % 4) }));
+}
+
+function svg(parts, v, size) {
+  const V = VARIANTS[v];
+  let s = '', seenStraight = false;
+  for (const p of parts) {
+    const r = rotFor(p.k, p.e);
+    let inner = V[KIND[p.k]](p.sp);
+    if (p.k === 'st' && seenStraight) inner = `<rect x="${50 - V.w / 2 - 6}" y="-1" width="${V.w + 12}" height="102" fill="var(--tile)"/>` + inner;
+    if (p.k === 'st') seenStraight = true;
+    s += `<g transform="rotate(${r * 90} 50 50)">${inner}</g>`;
+  }
+  const dim = size ? ` width="${size}" height="${size}"` : '';
+  return `<svg viewBox="0 0 100 100" class="tile"${dim} aria-hidden="true"><rect x="1" y="1" width="98" height="98" rx="6" class="face"/>${s}</svg>`;
+}
+
+const raw = (sp, k, e) => [{ sp, k, e: [...e].map(c => DIRS[c]) }];
+const SHEET = [
+  ['Head', sp => raw(sp, 'he', 's')],
+  ['Tail', sp => raw(sp, 'ta', 's')],
+  ['Straight', sp => raw(sp, 'st', 'ns')],
+  ['Turn', sp => raw(sp, 'tu', 'se')],
+  ['Crossing', sp => [...raw(sp, 'st', 'we'), ...raw(sp, 'st', 'ns')]],
+];
+const STRESS = [
+  ['Cat crosses dog', () => [...raw('c', 'st', 'we'), ...raw('d', 'st', 'ns')]],
+  ['Two heads (base-12)', () => orient(11, 0, 0)],
+  ['Head + tail (base-27)', () => orient(26, 0, 0)],
+  ['Cat + dog heads (base-22)', () => orient(21, 0, 0)],
+  ['Two tails (base-38)', () => orient(37, 0, 0)],
+];
+
+let variant = 'A', boardSeed = 7;
+const cell = () => +document.getElementById('size').value;
+
+function trio(parts) {
+  return `<div class="trio">${svg(parts, variant, 120)}${svg(parts, variant, cell())}${svg(parts, variant, 28)}</div>`;
+}
+
+function renderSheet() {
+  let h = '<table><tr><th></th>' + SHEET.map(([n]) => `<th>${n}</th>`).join('') + '</tr>';
+  for (const sp of ['c', 'd']) h += `<tr><th>${SP[sp]}</th>` + SHEET.map(([, f]) => `<td>${trio(f(sp))}</td>`).join('') + '</tr>';
+  h += '<tr><th>Edge cases</th>' + STRESS.map(([n]) => `<th>${n}</th>`).join('') + '</tr>';
+  h += '<tr><th></th>' + STRESS.map(([, f]) => `<td>${trio(f())}</td>`).join('') + '</tr></table>';
+  document.getElementById('sheet').innerHTML = h;
+}
+
+function rng(seed) { return () => (seed = (seed * 16807) % 2147483647) / 2147483647; }
+function buildBoard(seed) {
+  const rand = rng(seed), board = Array(49).fill(null);
+  const bag = TILES.map((_, i) => i).sort(() => rand() - .5);
+  const at = (i, d) => { const r = Math.floor(i / 7), c = i % 7, nr = r + [-1, 0, 1, 0][d], nc = c + [0, 1, 0, -1][d]; return nr < 0 || nr > 6 || nc < 0 || nc > 6 ? -1 : nr * 7 + nc; };
+  const edge = (parts, d) => parts.find(p => p.e.includes(d)) || null;
+  const fits = (i, parts) => {
+    let touch = false;
+    for (let d = 0; d < 4; d++) {
+      const j = at(i, d);
+      if (j < 0 || !board[j]) continue;
+      touch = true;
+      const a = edge(parts, d), b = edge(board[j], (d + 2) % 4);
+      if (!a !== !b) return false;
+      if (a && (a.sp !== b.sp || (a.k === 'he' && b.k === 'he') || (a.k === 'ta' && b.k === 'ta'))) return false;
+    }
+    return touch;
+  };
+  board[24] = orient(bag.pop(), 0, 0);
+  for (const t of bag) {
+    const opts = [];
+    for (let i = 0; i < 49; i++) if (!board[i]) for (let f = 0; f < 2; f++) for (let r = 0; r < 4; r++) { const p = orient(t, f, r); if (fits(i, p)) opts.push([i, p]); }
+    if (opts.length) { const [i, p] = opts[Math.floor(rand() * opts.length)]; board[i] = p; }
+    if (board.filter(Boolean).length >= 34) break;
+  }
+  return board;
+}
+let board = buildBoard(boardSeed);
+
+function renderBoard() {
+  document.getElementById('board').innerHTML = board.map(p => `<div class="cell">${p ? svg(p, variant) : ''}</div>`).join('');
+}
+function renderTray() {
+  document.getElementById('tray').innerHTML = TILES.map((t, i) => `<div class="pair"><div>${svg(orient(i, 0, 0), variant)}${svg(orient(i, 1, 0), variant)}</div>${t[0]}</div>`).join('');
+}
+
+function render() {
+  const V = VARIANTS[variant];
+  document.getElementById('vlabel').textContent = `${variant} · ${V.name}`;
+  document.getElementById('vnote').textContent = V.note;
+  document.documentElement.style.setProperty('--cell', cell() + 'px');
+  renderSheet(); renderBoard(); renderTray();
+}
+
+const faces = new Set();
+TILES.forEach((t, i) => [0, 1].forEach(f => {
+  const sigs = [0, 1, 2, 3].map(r => orient(i, f, r).map(p => p.sp + p.k + [...p.e].sort().join('')).sort().join('|')).sort();
+  faces.add(sigs[0]);
+}));
+document.getElementById('facts').textContent = `${TILES.length} tiles · ${TILES.length * 2} faces · ${faces.size} distinct faces (up to rotation) · 10 part drawings per style`;
+
+function go(k) {
+  variant = k;
+  try { history.replaceState(null, '', '#' + k.toLowerCase()); localStorage.setItem('tile-art-variant', k); } catch (e) {}
+  render();
+}
+function step(n) { go(KEYS[(KEYS.indexOf(variant) + n + KEYS.length) % KEYS.length]); }
+document.getElementById('prev').onclick = () => step(-1);
+document.getElementById('next').onclick = () => step(1);
+document.addEventListener('keydown', e => {
+  if (e.target.closest('input, textarea, select, [contenteditable]')) return;
+  if (e.key === 'ArrowLeft') step(-1);
+  if (e.key === 'ArrowRight') step(1);
+});
+document.getElementById('size').onchange = render;
+document.getElementById('vision').onchange = e => { document.getElementById('view').style.filter = e.target.value ? `url(#${e.target.value})` : ''; };
+document.getElementById('reboard').onclick = () => { board = buildBoard(++boardSeed * 7919); renderBoard(); };
+
+let start = location.hash.slice(1).toUpperCase();
+if (!VARIANTS[start]) { try { start = localStorage.getItem('tile-art-variant'); } catch (e) {} }
+go(VARIANTS[start] ? start : 'A');
+</script>

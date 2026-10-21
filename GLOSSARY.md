@@ -42,6 +42,8 @@
 
 **Turn**: One player's go: draw two tiles or play the reserve tile, place one tile, then choose a species and do a reserve action if the placement allows it.
 
+**Legal placement**: A cell, face and rotation where a tile can be placed under the connection rules.
+
 **Discard pile**: The open stack of tiles that players drew but did not place. It goes back to the bag after each reserve action.
 
 **Reserve**: A place next to a player that holds 0 or 1 tile. A player may play their reserve tile instead of drawing.

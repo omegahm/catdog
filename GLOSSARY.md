@@ -58,6 +58,10 @@
 
 **Tiebreak**: When points are tied, the player who has more animals at the longest length where the counts are different wins. If no such length exists, the game is a draw.
 
+**Art style**: How tile faces look on one player's screen. A player chooses Fur bands or Line style. The opponent does not see the choice.
+
+**Species colour**: The colour of cat parts or of dog parts on one player's screen. A player chooses both colours. The two colours are always different.
+
 **Seat**: One of the two player places in a game. A browser holds a seat through a secret token. There are no accounts.
 
 **Invite link**: The URL of a game. A visitor with no seat can use it to take the free seat.

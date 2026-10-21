@@ -126,3 +126,8 @@ Most points win.
 If the points are tied, compare the lengths from the longest down. The first length where one player has more animals than the other decides the winner.
 If no length is different, the game is a draw.
 If no animal is complete at the end, both players score 0 and the game is a draw.
+
+### Resign
+
+You may resign at any time during the game, also on the opponent's turn.
+The game ends at once and the opponent wins. The board is not scored.

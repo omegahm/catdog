@@ -61,3 +61,7 @@
 **Seat link**: A private URL that opens a seat on another device.
 
 **Rematch**: A new game between the same two seats. One player offers it and the other accepts. The first player is chosen at random again.
+
+**Resign**: A player ends the game at once and loses. The board is not scored.
+
+**Presence**: Whether a seat has at least one open connection to the game. A seat is online or offline.

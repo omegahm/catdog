@@ -8,6 +8,10 @@
 
 **Tile set**: A named collection of tiles. The base set is always in the bag. Optional sets can be added.
 
+**Bag**: The closed collection of tiles that players draw from. Both players can see how many tiles it holds, but not which tiles.
+
+**Drawn tile**: One of the two tiles a player takes from the bag at the start of a turn. Drawn tiles are open to both players.
+
 **Face**: One of the two sides of a tile. The player chooses which face is up when placing. A face holds 1 or 2 parts.
 
 **Edge**: One of the 4 sides of a tile. An edge shows a part or background.

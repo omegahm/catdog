@@ -32,6 +32,9 @@ Each turn, a player draws two tiles from a bag.
 The player chooses one of the tiles to place on the board.
 The other tile is discarded.
 
+The drawn tiles are open. Both players can see them as soon as they are drawn.
+The number of tiles in the bag is open. The tiles in the bag are not shown.
+
 When placing a tile, the player chooses which face is up and rotates it to any of 4 orientations.
 
 You are not allowed to place a tile, if it does not share an edge with an existing tile on the board. Diagonal neighbours do not count. (Except for the first tile, which can be placed anywhere on the board.)

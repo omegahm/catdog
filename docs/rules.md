@@ -15,9 +15,16 @@ A part is a cat or a dog part, and is one of:
 - Straight body: touches 2 opposite edges.
 - Turn body: touches 2 adjacent edges.
 
-Two parts on one face never share an edge and never cross.
+Two parts on one face never share an edge.
+Two parts on one face never cross, with one exception: two straight bodies may cross. They can be of the same species or of different species.
+Crossing parts do not connect. One goes over the other.
 An edge with no part is background.
 A face can hold a cat part and a dog part, two parts of the same species, or just one part.
+
+### Tile set
+
+The bag holds the 44 tiles of the base tile set. The file [config/tiles/base.yml](../config/tiles/base.yml) describes each tile.
+Two tiles can be identical.
 
 ## Placement
 

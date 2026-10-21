@@ -6,6 +6,8 @@
 
 **Tile**: A square piece with 4 edges and two faces. Players draw, place and discard tiles.
 
+**Tile set**: A named collection of tiles. The base set is always in the bag. Optional sets can be added.
+
 **Face**: One of the two sides of a tile. The player chooses which face is up when placing. A face holds 1 or 2 parts.
 
 **Edge**: One of the 4 sides of a tile. An edge shows a part or background.
@@ -19,6 +21,8 @@
 **Straight body**: A part that touches 2 opposite edges.
 
 **Turn body**: A part that touches 2 adjacent edges.
+
+**Crossing**: Two straight bodies on one face that cross. They do not connect: one goes over the other.
 
 **Background**: An edge with no part.
 

@@ -53,3 +53,11 @@
 **Length point**: The 1 point a player scores for a length when they have more complete animals of that length than the opponent.
 
 **Tiebreak**: When points are tied, the player who has more animals at the longest length where the counts are different wins. If no such length exists, the game is a draw.
+
+**Seat**: One of the two player places in a game. A browser holds a seat through a secret token. There are no accounts.
+
+**Invite link**: The URL of a game. A visitor with no seat can use it to take the free seat.
+
+**Seat link**: A private URL that opens a seat on another device.
+
+**Rematch**: A new game between the same two seats. One player offers it and the other accepts. The first player is chosen at random again.

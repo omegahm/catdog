@@ -12,6 +12,11 @@ module Rules
       new(names, tiles)
     end
 
+    def self.cached(*names)
+      @cached ||= {}
+      @cached[names] ||= load(*names)
+    end
+
     def self.parse(name, data)
       raise InvalidTileSet, "#{name}: the file names set #{data["set"].inspect}" unless data["set"] == name
 

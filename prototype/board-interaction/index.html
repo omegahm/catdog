@@ -1,0 +1,698 @@
+<title>CatDog Board Prototype</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700&display=swap">
+<style>
+/* PROTOTYPE, throwaway. Layout: the board is the table; controls sit beside it on desktop and under it on phone. */
+:root {
+  --bg: #e4eaec; --surface: #d3dcdf; --line: #b5c3c8; --ink: #1c2a31; --muted: #56676f;
+  --tile: #fbfaf5; --tile-edge: #c9c2b0; --cat: #d96f12; --dog: #2a62a8;
+  --legal: #1b9460; --legal-soft: rgba(27, 148, 96, .22); --warn: #b03e2b;
+  --pill: #1c2a31; --pill-ink: #f2f6f7;
+  --display: "Bricolage Grotesque", ui-sans-serif, system-ui, sans-serif;
+  --body: ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+  --mono: ui-monospace, "SF Mono", Menlo, monospace;
+}
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) {
+  --bg: #10171a; --surface: #1a2529; --line: #2c3b41; --ink: #e2eaed; --muted: #8fa1a8;
+  --tile: #ece7d9; --tile-edge: #a39b8b; --cat: #e5801f; --dog: #3b74c0;
+  --legal: #3fcf8a; --legal-soft: rgba(63, 207, 138, .22); --warn: #ea7660;
+  --pill: #e2eaed; --pill-ink: #10171a; color-scheme: dark;
+} }
+:root[data-theme="dark"] {
+  --bg: #10171a; --surface: #1a2529; --line: #2c3b41; --ink: #e2eaed; --muted: #8fa1a8;
+  --tile: #ece7d9; --tile-edge: #a39b8b; --cat: #e5801f; --dog: #3b74c0;
+  --legal: #3fcf8a; --legal-soft: rgba(63, 207, 138, .22); --warn: #ea7660;
+  --pill: #e2eaed; --pill-ink: #10171a; color-scheme: dark;
+}
+[hidden] { display: none !important; }
+* { box-sizing: border-box; }
+body {
+  background: var(--bg); color: var(--ink); font-family: var(--body); margin: 0;
+  padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px));
+  padding-block: 12px 96px;
+}
+button { font: inherit; color: inherit; }
+button:focus-visible, .hand:focus-visible { outline: 3px solid var(--legal); outline-offset: 2px; }
+header { display: flex; flex-wrap: wrap; gap: 8px 16px; align-items: baseline; margin-bottom: 12px; }
+h1 { font-family: var(--display); font-weight: 700; font-size: 1.4rem; margin: 0; letter-spacing: -.01em; }
+.stats { font-variant-numeric: tabular-nums; color: var(--muted); }
+.tools { display: flex; gap: 6px; margin-left: auto; flex-wrap: wrap; }
+.btn { border: 1px solid var(--line); background: var(--surface); border-radius: 8px; padding: 6px 12px; cursor: pointer; }
+.btn.primary { background: var(--legal); border-color: var(--legal); color: var(--bg); font-weight: 600; }
+.btn:disabled { opacity: .4; cursor: default; }
+.msg { min-height: 1.4em; margin: 0 0 10px; font-weight: 600; }
+.msg.over { color: var(--warn); }
+
+.layout { display: flex; flex-wrap: wrap; gap: 16px; align-items: flex-start; }
+.board {
+  display: grid; grid-template-columns: repeat(7, 1fr); gap: 3px; padding: 6px;
+  width: min(100%, 64vh, 560px); aspect-ratio: 1; max-width: 100%;
+  background: var(--surface); border-radius: 10px; border: 1px solid var(--line); touch-action: manipulation;
+}
+.cell {
+  position: relative; border: 0; padding: 0; background: var(--bg); border-radius: 4px;
+  aspect-ratio: 1; min-width: 0; cursor: default;
+}
+.cell.legal { background: var(--legal-soft); box-shadow: inset 0 0 0 2px var(--legal); cursor: pointer; }
+.cell.last .tile { outline: 3px solid var(--ink); outline-offset: -1px; border-radius: 5px; }
+.cell.sel, .cell.hover { box-shadow: inset 0 0 0 3px var(--ink); }
+.cell.hover-bad { box-shadow: inset 0 0 0 3px var(--warn); }
+.cell .tile { position: absolute; inset: 0; width: 100%; height: 100%; display: block; }
+.tile.ghost { opacity: .72; }
+.tile.ghost.bad { opacity: .35; filter: grayscale(1); }
+.badge {
+  position: absolute; right: 2px; bottom: 2px; font: 700 .7rem/1 var(--mono); background: var(--legal); color: var(--bg);
+  border-radius: 99px; padding: 2px 5px; pointer-events: none;
+}
+
+.side { flex: 1 1 260px; min-width: 0; display: flex; flex-direction: column; gap: 12px; }
+.hint { color: var(--muted); margin: 0; max-width: 40ch; }
+.tray { display: flex; gap: 12px; flex-wrap: wrap; }
+.hand {
+  display: flex; flex-direction: column; align-items: center; gap: 4px; padding: 8px; width: 120px;
+  border: 2px solid transparent; background: var(--surface); border-radius: 10px; cursor: pointer; touch-action: none; user-select: none;
+}
+.hand .tile { width: 96px; height: 96px; transition: transform .15s; }
+.hand.on { border-color: var(--legal); }
+.hand.dim { opacity: .55; }
+.hand.nofit .tile { filter: grayscale(1); opacity: .5; }
+.cap { font: .72rem/1.3 var(--mono); color: var(--muted); text-align: center; }
+.row { display: flex; gap: 6px; flex-wrap: wrap; }
+.floater { position: fixed; left: 0; top: 0; pointer-events: none; z-index: 30; filter: drop-shadow(0 6px 10px rgba(0,0,0,.35)); }
+.floater .tile { width: 100%; height: 100%; display: block; }
+.mini { display: flex; gap: 4px; }
+.mini .tile { width: 44px; height: 44px; }
+.pair { display: flex; flex-direction: column; gap: 4px; }
+.pair h3 { font: 600 .75rem/1.2 var(--body); text-transform: uppercase; letter-spacing: .06em; color: var(--muted); margin: 0; }
+.pair .faces { display: flex; gap: 6px; }
+.pair .hand { width: 92px; padding: 6px; }
+.pair .hand .tile { width: 76px; height: 76px; }
+.opts { display: grid; grid-template-columns: repeat(auto-fill, minmax(64px, 1fr)); gap: 8px; }
+.opt { padding: 4px; border: 1px solid var(--line); background: var(--surface); border-radius: 8px; cursor: pointer; }
+.opt .tile { width: 100%; height: auto; display: block; }
+.group h3 { font: 600 .8rem/1.2 var(--body); text-transform: uppercase; letter-spacing: .06em; color: var(--muted); margin: 0 0 6px; }
+
+.tile .face { fill: var(--tile); stroke: var(--tile-edge); stroke-width: 1.5; }
+.tile .bd { fill: none; stroke-width: 18; }
+.tile .gap { stroke: var(--tile); stroke-width: 30; }
+.tile .tl { fill: none; stroke-width: 7; stroke-linecap: round; }
+.tile .s-c { stroke: var(--cat); } .tile .f-c { fill: var(--cat); }
+.tile .s-d { stroke: var(--dog); } .tile .f-d { fill: var(--dog); }
+.tile .eye { fill: var(--tile); }
+
+details.state { margin-top: 16px; }
+details.state pre { font: .75rem/1.4 var(--mono); background: var(--surface); padding: 10px; border-radius: 8px; overflow-x: auto; }
+.switcher {
+  position: fixed; left: 50%; transform: translateX(-50%); bottom: calc(14px + env(safe-area-inset-bottom, 0px)); z-index: 40;
+  display: flex; align-items: center; gap: 4px; background: var(--pill); color: var(--pill-ink);
+  border-radius: 99px; padding: 4px; box-shadow: 0 6px 20px rgba(0,0,0,.3); font: 600 .85rem var(--mono);
+}
+.switcher button { background: none; border: 0; color: inherit; padding: 8px 12px; border-radius: 99px; cursor: pointer; }
+.switcher span { padding: 0 6px; white-space: nowrap; }
+@media (prefers-reduced-motion: reduce) { .hand .tile { transition: none; } }
+</style>
+
+<div data-controller="switcher">
+  <header>
+    <h1>CatDog board</h1>
+    <span class="stats" data-stats></span>
+    <div class="tools">
+      <button class="btn" type="button" id="undo" onclick="game.undo()">Undo</button>
+      <button class="btn" type="button" id="new-seeded" onclick="game.reset(true)">New board</button>
+      <button class="btn" type="button" id="new-empty" onclick="game.reset(false)">Empty board</button>
+    </div>
+  </header>
+  <p class="msg" data-msg></p>
+
+  <section data-switcher-target="variant" data-key="combo" data-name="Both faces, tap or drag" data-controller="combo">
+    <div class="layout">
+      <div class="board" data-combo-target="board"></div>
+      <div class="side">
+        <p class="hint" data-combo-target="hint"></p>
+        <div class="tray" data-combo-target="tray"></div>
+        <div class="row">
+          <button class="btn primary" type="button" id="combo-place" data-combo-target="place" data-action="combo#place">Place (Enter)</button>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section data-switcher-target="variant" data-key="tap" data-name="Tap tile, tap cell" data-controller="tap" hidden>
+    <div class="layout">
+      <div class="board" data-tap-target="board"></div>
+      <div class="side">
+        <p class="hint" data-tap-target="hint"></p>
+        <div class="tray" data-tap-target="tray"></div>
+        <div class="row">
+          <button class="btn" type="button" id="tap-rotate" data-action="tap#rotate">Rotate (R)</button>
+          <button class="btn" type="button" id="tap-flip" data-action="tap#flip">Flip (F)</button>
+          <button class="btn primary" type="button" id="tap-place" data-tap-target="place" data-action="tap#place">Place (Enter)</button>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section data-switcher-target="variant" data-key="drag" data-name="Drag and drop" data-controller="drag" hidden>
+    <div class="layout">
+      <div class="board" data-drag-target="board"></div>
+      <div class="side">
+        <p class="hint">Drag a tile onto a green cell. Tap a tile to rotate it. On a phone the tile floats above your finger.</p>
+        <div class="tray" data-drag-target="tray"></div>
+      </div>
+    </div>
+  </section>
+
+  <section data-switcher-target="variant" data-key="spot" data-name="Spot first" data-controller="spot" hidden>
+    <div class="layout">
+      <div class="board" data-spot-target="board"></div>
+      <div class="side">
+        <div class="tray" data-spot-target="tray"></div>
+        <div data-spot-target="sheet"></div>
+      </div>
+    </div>
+  </section>
+
+  <details class="state"><summary>State</summary><pre data-state></pre></details>
+
+  <nav class="switcher" aria-label="Prototype variant">
+    <button type="button" data-action="switcher#prev" aria-label="Previous variant">&larr;</button>
+    <span data-switcher-target="label"></span>
+    <button type="button" data-action="switcher#next" aria-label="Next variant">&rarr;</button>
+  </nav>
+</div>
+
+<script src="https://unpkg.com/@hotwired/stimulus@3.2.2/dist/stimulus.umd.js"></script>
+<script>
+const TILES = [["base-01",[["d","st","we"]],[["d","tu","se"]]],["base-02",[["d","st","we"]],[["d","tu","se"]]],["base-03",[["d","st","we"]],[["d","tu","se"]]],["base-04",[["d","st","we"]],[["d","tu","se"]]],["base-05",[["d","st","we"]],[["d","tu","se"]]],["base-06",[["c","st","we"]],[["c","tu","se"]]],["base-07",[["c","st","we"]],[["c","tu","se"]]],["base-08",[["c","st","we"]],[["c","tu","se"]]],["base-09",[["c","st","we"]],[["c","tu","se"]]],["base-10",[["c","st","we"]],[["c","tu","se"]]],["base-11",[["c","st","we"],["c","he","s"]],[["c","st","we"],["c","ta","s"]]],["base-12",[["c","he","w"],["c","he","s"]],[["c","ta","w"],["c","ta","s"]]],["base-13",[["d","he","w"],["d","he","s"]],[["d","ta","w"],["d","ta","s"]]],["base-14",[["d","st","we"],["d","he","s"]],[["d","st","we"],["d","ta","s"]]],["base-15",[["c","st","we"],["d","he","s"]],[["c","st","we"],["d","ta","s"]]],["base-16",[["d","tu","ne"],["c","he","s"]],[["d","tu","nw"],["c","he","s"]]],["base-17",[["c","tu","ne"],["d","he","s"]],[["c","tu","nw"],["d","he","s"]]],["base-18",[["c","tu","ne"],["c","he","s"]],[["c","tu","nw"],["c","he","s"]]],["base-19",[["d","tu","ne"],["d","he","s"]],[["d","tu","nw"],["d","he","s"]]],["base-20",[["c","he","w"],["c","he","e"]],[["c","ta","w"],["c","ta","e"]]],["base-21",[["d","he","w"],["d","he","e"]],[["d","ta","w"],["d","ta","e"]]],["base-22",[["d","he","w"],["c","he","s"]],[["c","he","w"],["d","he","s"]]],["base-23",[["d","tu","ne"],["d","ta","s"]],[["d","tu","nw"],["d","ta","s"]]],["base-24",[["c","tu","ne"],["d","ta","s"]],[["c","tu","nw"],["d","ta","s"]]],["base-25",[["d","tu","ne"],["c","ta","s"]],[["d","tu","nw"],["c","ta","s"]]],["base-26",[["c","tu","ne"],["c","ta","s"]],[["c","tu","nw"],["c","ta","s"]]],["base-27",[["c","he","s"],["c","ta","e"]],[["c","ta","w"],["c","he","s"]]],["base-28",[["d","he","s"],["d","ta","e"]],[["d","ta","w"],["d","he","s"]]],["base-29",[["d","he","s"],["c","ta","e"]],[["c","ta","w"],["d","he","s"]]],["base-30",[["d","ta","n"],["c","he","s"]],[["c","ta","n"],["d","he","s"]]],["base-31",[["c","ta","n"],["c","he","s"]],[["c","tu","nw"],["d","tu","se"]]],["base-32",[["d","he","w"],["c","he","e"]],[["c","ta","w"],["d","ta","e"]]],["base-33",[["d","st","we"],["c","he","s"]],[["d","st","we"],["c","ta","s"]]],["base-34",[["d","ta","n"],["d","he","s"]],[["c","tu","nw"],["d","tu","se"]]],["base-35",[["d","he","s"]],[["d","ta","s"]]],["base-36",[["c","he","s"]],[["c","ta","s"]]],["base-37",[["c","he","s"],["d","ta","e"]],[["d","ta","w"],["c","he","s"]]],["base-38",[["c","ta","w"],["d","ta","s"]],[["d","ta","w"],["c","ta","s"]]],["base-39",[["c","he","s"]],[["c","ta","s"]]],["base-40",[["d","he","s"]],[["d","ta","s"]]],["base-41",[["c","st","we"],["c","st","ns"]],[["c","st","we"]]],["base-42",[["d","st","we"],["d","st","ns"]],[["d","st","we"]]],["base-43",[["c","st","we"],["d","st","ns"]],[["c","st","we"]]],["base-44",[["c","st","we"],["d","st","ns"]],[["d","st","we"]]]];
+const N = 7;
+const DIRS = { n: 0, e: 1, s: 2, w: 3 };
+const DX = [0, 1, 0, -1], DY = [-1, 0, 1, 0];
+const MID = [[50, 0], [100, 50], [50, 100], [0, 50]];
+const IN = [[0, 1], [-1, 0], [0, -1], [1, 0]];
+
+function rng(seed) {
+  return () => { seed = (seed + 0x6D2B79F5) | 0; let t = Math.imul(seed ^ (seed >>> 15), 1 | seed); t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t; return ((t ^ (t >>> 14)) >>> 0) / 4294967296; };
+}
+function orient(t, face, rot) {
+  return TILES[t][1 + face].map(([sp, k, e]) => ({ sp, k, e: [...e].map(c => (DIRS[c] + rot) % 4) }));
+}
+function sig(parts) {
+  return parts.map(p => p.sp + p.k + [...p.e].sort().join('')).sort().join('|');
+}
+function partAt(parts, d) { return parts.findIndex(p => p.e.includes(d)); }
+
+function tileSVG(parts, cls = '') {
+  let s = '';
+  const straights = parts.filter(p => p.k === 'st');
+  for (const p of parts) {
+    const c = p.sp;
+    if (p.k === 'st') {
+      const [[x1, y1], [x2, y2]] = p.e.map(d => MID[d]);
+      if (straights.length === 2 && p === straights[1]) s += `<line x1="${x1}" y1="${y1}" x2="${x2}" y2="${y2}" class="gap"/>`;
+      s += `<line x1="${x1}" y1="${y1}" x2="${x2}" y2="${y2}" class="bd s-${c}"/>`;
+    } else if (p.k === 'tu') {
+      const [[x1, y1], [x2, y2]] = p.e.map(d => MID[d]);
+      s += `<path d="M${x1} ${y1} Q50 50 ${x2} ${y2}" class="bd s-${c}"/>`;
+    } else {
+      const d = p.e[0], [mx, my] = MID[d], [vx, vy] = IN[d], px = -vy, py = vx;
+      const at = (v, q) => `${mx + vx * v + px * q} ${my + vy * v + py * q}`;
+      if (p.k === 'ta') {
+        s += `<line x1="${mx}" y1="${my}" x2="${mx + vx * 8}" y2="${my + vy * 8}" class="bd s-${c}" style="stroke-width:14"/>`;
+        s += `<path d="M${at(4, 0)} L${at(20, 0)} Q${at(34, 2)} ${at(30, 12)}" class="tl s-${c}"/>`;
+      } else {
+        s += `<line x1="${mx}" y1="${my}" x2="${mx + vx * 24}" y2="${my + vy * 24}" class="bd s-${c}"/>`;
+        for (const k of [-1, 1]) {
+          s += c === 'c'
+            ? `<polygon points="${at(32, k * 4)} ${at(32, k * 15)} ${at(48, k * 12)}" class="f-${c}"/>`
+            : `<circle cx="${mx + vx * 34 + px * k * 14}" cy="${my + vy * 34 + py * k * 14}" r="7" class="f-${c}"/>`;
+        }
+        s += `<circle cx="${mx + vx * 30}" cy="${my + vy * 30}" r="14" class="f-${c}"/>`;
+        for (const k of [-1, 1]) s += `<circle cx="${mx + vx * 33 + px * k * 5}" cy="${my + vy * 33 + py * k * 5}" r="2.6" class="eye"/>`;
+      }
+    }
+  }
+  return `<svg viewBox="0 0 100 100" class="tile ${cls}" aria-hidden="true"><rect x="1" y="1" width="98" height="98" rx="6" class="face"/>${s}</svg>`;
+}
+
+class Game {
+  constructor() { this.reset(true); }
+  emit(type = 'game:change') { document.dispatchEvent(new CustomEvent(type)); }
+  reset(seeded) {
+    this.seed = Math.floor(Math.random() * 1e6);
+    this.rand = rng(this.seed);
+    this.board = Array(N * N).fill(null);
+    this.bag = TILES.map((_, i) => i);
+    for (let i = this.bag.length - 1; i > 0; i--) { const j = Math.floor(this.rand() * (i + 1)); [this.bag[i], this.bag[j]] = [this.bag[j], this.bag[i]]; }
+    this.discard = []; this.history = []; this.completed = []; this.last = null; this.msg = ''; this.over = '';
+    this.draw();
+    if (seeded) {
+      for (let k = 0; k < 6 && !this.over; k++) {
+        const opts = this.options();
+        const o = opts[Math.floor(this.rand() * opts.length)];
+        this.place(o.h, o.face, o.rot, o.i, true);
+      }
+      this.history = []; this.msg = ''; this.completed = [];
+    }
+    this.emit();
+  }
+  cell(x, y) { return (x < 0 || y < 0 || x >= N || y >= N) ? undefined : this.board[y * N + x]; }
+  empty() { return this.board.every(c => c === null); }
+  legal(t, face, rot, i) {
+    if (this.board[i] !== null) return false;
+    const x = i % N, y = Math.floor(i / N), parts = orient(t, face, rot);
+    let touches = false;
+    for (let d = 0; d < 4; d++) {
+      const nb = this.cell(x + DX[d], y + DY[d]), a = partAt(parts, d);
+      if (nb === undefined) { if (a >= 0) return false; continue; }
+      if (nb === null) continue;
+      touches = true;
+      const b = partAt(nb.parts, (d + 2) % 4);
+      if ((a >= 0) !== (b >= 0)) return false;
+      if (a >= 0 && parts[a].sp !== nb.parts[b].sp) return false;
+    }
+    if (!touches && !this.empty()) return false;
+    this.board[i] = { t, face, rot, parts };
+    let ok = true;
+    for (let p = 0; p < parts.length && ok; p++) {
+      const c = this.component(i, p);
+      if (c.heads > 1 || c.tails > 1 || (c.heads + c.tails === 0 && c.open === 0)) ok = false;
+    }
+    this.board[i] = null;
+    return ok;
+  }
+  component(i, p) {
+    const seen = new Set(), stack = [[i, p]];
+    let heads = 0, tails = 0, open = 0;
+    while (stack.length) {
+      const [ci, pi] = stack.pop(), key = ci + ':' + pi;
+      if (seen.has(key)) continue;
+      seen.add(key);
+      const part = this.board[ci].parts[pi];
+      if (part.k === 'he') heads++;
+      if (part.k === 'ta') tails++;
+      for (const d of part.e) {
+        const nb = this.cell(ci % N + DX[d], Math.floor(ci / N) + DY[d]);
+        if (nb === null) { open++; continue; }
+        if (!nb) continue;
+        const j = partAt(nb.parts, (d + 2) % 4);
+        if (j >= 0) stack.push([ci + DX[d] + DY[d] * N, j]);
+      }
+    }
+    return { heads, tails, open, size: seen.size, keys: [...seen], sp: this.board[i].parts[p].sp };
+  }
+  legalCells(t, face, rot) {
+    const s = new Set();
+    for (let i = 0; i < N * N; i++) if (this.legal(t, face, rot, i)) s.add(i);
+    return s;
+  }
+  options(onlyHand) {
+    const out = [];
+    this.hand.forEach((t, h) => {
+      if (onlyHand !== undefined && onlyHand !== h) return;
+      const seenSig = new Set();
+      for (let face = 0; face < 2; face++) for (let rot = 0; rot < 4; rot++) {
+        const parts = orient(t, face, rot), g = sig(parts);
+        if (seenSig.has(g)) continue;
+        seenSig.add(g);
+        for (let i = 0; i < N * N; i++) if (this.legal(t, face, rot, i)) out.push({ h, t, face, rot, i, parts });
+      }
+    });
+    return out;
+  }
+  fits(h) { return this.options(h).length > 0; }
+  snapshot() { return JSON.stringify({ board: this.board, bag: this.bag, discard: this.discard, hand: this.hand, completed: this.completed, last: this.last, over: this.over }); }
+  undo() {
+    const s = this.history.pop();
+    if (!s) return;
+    Object.assign(this, JSON.parse(s));
+    this.msg = 'Undone.';
+    this.emit();
+  }
+  place(h, face, rot, i, quiet) {
+    if (!this.legal(this.hand[h], face, rot, i)) return false;
+    this.history.push(this.snapshot());
+    const t = this.hand[h];
+    this.board[i] = { t, face, rot, parts: orient(t, face, rot) };
+    if (this.hand.length > 1) this.discard.push(this.hand[1 - h]);
+    this.last = i;
+    const done = new Set(), news = [];
+    this.board[i].parts.forEach((_, p) => {
+      const c = this.component(i, p);
+      if (c.heads === 1 && c.tails === 1 && !c.keys.some(k => done.has(k))) { c.keys.forEach(k => done.add(k)); news.push(c); }
+    });
+    news.forEach(c => this.completed.push({ species: c.sp === 'c' ? 'cat' : 'dog', length: c.size }));
+    this.msg = news.length ? news.map(c => `${c.sp === 'c' ? 'Cat' : 'Dog'} complete, length ${c.size}.`).join(' ') + ' (Reserve action not in this prototype.)' : '';
+    this.draw();
+    if (!quiet) this.emit();
+    return true;
+  }
+  draw() {
+    if (this.bag.length < 2) { this.hand = []; this.over = 'The bag holds fewer than 2 tiles: the game ends.'; return; }
+    this.hand = [this.bag.pop(), this.bag.pop()];
+    if (!this.fits(0) && !this.fits(1)) this.over = 'Neither drawn tile fits: the game ends.';
+  }
+}
+
+function boardHTML(ctrl, { legal = new Set(), ghost = null, badge = {}, selected = null } = {}) {
+  let h = '';
+  for (let i = 0; i < N * N; i++) {
+    const t = game.board[i], cls = ['cell'];
+    if (legal.has(i)) cls.push('legal');
+    if (i === game.last) cls.push('last');
+    if (i === selected) cls.push('sel');
+    let inner = t ? tileSVG(t.parts) : (ghost && ghost.i === i ? tileSVG(ghost.parts, 'ghost' + (ghost.bad ? ' bad' : '')) : '');
+    if (badge[i]) inner += `<span class="badge">${badge[i]}</span>`;
+    const act = ctrl ? ` data-action="click->${ctrl}#cell" data-${ctrl}-idx-param="${i}"` : '';
+    h += `<button type="button" class="${cls.join(' ')}" data-idx="${i}"${act} aria-label="Cell ${i % N + 1},${Math.floor(i / N) + 1}">${inner}</button>`;
+  }
+  return h;
+}
+
+function showState(ui) {
+  document.querySelector('[data-stats]').textContent = `Bag ${game.bag.length} · Discard ${game.discard.length} · Seed ${game.seed}`;
+  const m = document.querySelector('[data-msg]');
+  m.textContent = game.over || game.msg;
+  m.classList.toggle('over', !!game.over);
+  document.getElementById('undo').disabled = !game.history.length;
+  document.querySelector('[data-state]').textContent = JSON.stringify({
+    ui,
+    hand: game.hand.map(t => TILES[t][0]),
+    discard: game.discard.map(t => TILES[t][0]),
+    lastPlaced: game.last,
+    completed: game.completed,
+    over: game.over || null,
+  }, null, 2);
+}
+
+const app = Stimulus.Application.start();
+
+class Variant extends Stimulus.Controller {
+  connect() {
+    this.onChange = () => { this.resetUI(); this.render(); };
+    this.onRefresh = () => this.render();
+    document.addEventListener('game:change', this.onChange);
+    document.addEventListener('ui:refresh', this.onRefresh);
+    this.resetUI();
+    this.render();
+  }
+  disconnect() {
+    document.removeEventListener('game:change', this.onChange);
+    document.removeEventListener('ui:refresh', this.onRefresh);
+  }
+  get active() { return !this.element.hidden; }
+  resetUI() {}
+}
+
+class TapController extends Variant {
+  static targets = ['board', 'tray', 'place', 'hint'];
+  connect() {
+    super.connect();
+    this.onKey = e => this.key(e);
+    document.addEventListener('keydown', this.onKey);
+  }
+  disconnect() { super.disconnect(); document.removeEventListener('keydown', this.onKey); }
+  resetUI() { this.sel = null; this.or = [{ face: 0, rot: 0 }, { face: 0, rot: 0 }]; this.target = null; }
+  render() {
+    const sel = this.sel, o = sel !== null ? this.or[sel] : null, t = sel !== null ? game.hand[sel] : null;
+    const legal = sel !== null ? game.legalCells(t, o.face, o.rot) : new Set();
+    const ghost = this.target !== null && sel !== null ? { i: this.target, parts: orient(t, o.face, o.rot), bad: !legal.has(this.target) } : null;
+    this.boardTarget.innerHTML = boardHTML('tap', { legal, ghost, selected: this.target });
+    this.trayTarget.innerHTML = game.hand.map((ht, i) => {
+      const or = this.or[i], fits = game.fits(i);
+      const cls = ['hand', i === sel ? 'on' : '', sel !== null && i !== sel ? 'dim' : '', fits ? '' : 'nofit'].join(' ');
+      return `<button type="button" class="${cls}" data-action="click->tap#pick" data-tap-i-param="${i}">${tileSVG(orient(ht, or.face, or.rot))}<span class="cap">${TILES[ht][0]} · ${or.face ? 'back' : 'front'}${fits ? '' : '<br>no spot'}</span></button>`;
+    }).join('') || '<p class="hint">No tiles in hand.</p>';
+    this.placeTarget.disabled = !(ghost && !ghost.bad);
+    this.hintTarget.textContent = sel === null ? 'Tap a tile to pick it. Tap it again to rotate.'
+      : this.target === null ? `Tap a green cell (${legal.size} fit this way). Rotate or flip to see other cells.`
+      : ghost.bad ? 'This way does not fit here. Rotate or flip, or tap another cell.'
+      : 'Tap the cell again, or press Place.';
+    if (this.active) showState({ variant: 'tap', selected: sel, face: o && (o.face ? 'back' : 'front'), rot: o && o.rot * 90, target: this.target, legalCells: legal.size });
+  }
+  pick({ params: { i } }) {
+    if (this.sel === i) this.or[i].rot = (this.or[i].rot + 1) % 4;
+    else this.sel = i;
+    this.render();
+  }
+  rotate() { if (this.sel === null) return; const o = this.or[this.sel]; o.rot = (o.rot + 1) % 4; this.render(); }
+  flip() { if (this.sel === null) return; const o = this.or[this.sel]; o.face ^= 1; this.render(); }
+  cell({ params: { idx } }) {
+    if (this.sel === null || game.board[idx]) return;
+    const o = this.or[this.sel];
+    if (this.target === idx && game.legal(game.hand[this.sel], o.face, o.rot, idx)) return this.place();
+    this.target = game.legal(game.hand[this.sel], o.face, o.rot, idx) ? idx : null;
+    this.render();
+  }
+  place() {
+    if (this.sel === null || this.target === null) return;
+    const o = this.or[this.sel];
+    game.place(this.sel, o.face, o.rot, this.target);
+  }
+  key(e) {
+    if (!this.active || e.target.closest('input,textarea,[contenteditable]')) return;
+    if (e.key === 'r' || e.key === 'R') this.rotate();
+    else if (e.key === 'f' || e.key === 'F') this.flip();
+    else if (e.key === '1' || e.key === '2') { this.sel = +e.key - 1; this.render(); }
+    else if (e.key === 'Enter' && this.target !== null) { e.preventDefault(); this.place(); }
+  }
+}
+
+class DragController extends Variant {
+  static targets = ['board', 'tray'];
+  resetUI() { this.or = [{ face: 0, rot: 0 }, { face: 0, rot: 0 }]; this.p = null; }
+  render() {
+    const legal = this.p && this.p.moved ? this.p.legal : new Set();
+    this.boardTarget.innerHTML = boardHTML(null, { legal });
+    this.trayTarget.innerHTML = game.hand.map((ht, i) => {
+      const or = this.or[i], n = game.options(i).length;
+      return `<div class="hand ${n ? '' : 'nofit'}" tabindex="0" data-i="${i}" data-action="pointerdown->drag#down">${tileSVG(orient(ht, or.face, or.rot))}<span class="cap">${TILES[ht][0]} · ${or.face ? 'back' : 'front'}<br>${n ? n + ' ways fit' : 'no spot'}</span><button type="button" class="btn" data-action="pointerdown->drag#stop click->drag#flip" data-drag-i-param="${i}">Flip</button></div>`;
+    }).join('') || '<p class="hint">No tiles in hand.</p>';
+    if (this.active) showState({ variant: 'drag', orientations: this.or.map(o => ({ face: o.face ? 'back' : 'front', rot: o.rot * 90 })), dragging: this.p && this.p.moved ? this.p.i : null });
+  }
+  stop(e) { e.stopPropagation(); }
+  flip({ params: { i } }) { this.or[i].face ^= 1; this.render(); }
+  down(e) {
+    if (e.button > 0) return;
+    e.preventDefault();
+    this.p = { i: +e.currentTarget.dataset.i, x: e.clientX, y: e.clientY, touch: e.pointerType !== 'mouse', moved: false, hover: null };
+    this.mv = ev => this.move(ev);
+    this.up = ev => this.end(ev);
+    window.addEventListener('pointermove', this.mv);
+    window.addEventListener('pointerup', this.up);
+    window.addEventListener('pointercancel', this.up);
+  }
+  move(ev) {
+    const p = this.p;
+    if (!p) return;
+    if (!p.moved && Math.hypot(ev.clientX - p.x, ev.clientY - p.y) < 8) return;
+    const o = this.or[p.i];
+    if (!p.moved) {
+      p.moved = true;
+      p.legal = game.legalCells(game.hand[p.i], o.face, o.rot);
+      this.render();
+      p.size = this.boardTarget.querySelector('.cell').getBoundingClientRect().width;
+      p.el = document.createElement('div');
+      p.el.className = 'floater';
+      p.el.style.width = p.el.style.height = p.size + 'px';
+      p.el.innerHTML = tileSVG(orient(game.hand[p.i], o.face, o.rot));
+      document.body.appendChild(p.el);
+    }
+    const off = p.touch ? p.size * 1.1 : 0, cx = ev.clientX, cy = ev.clientY - off;
+    p.el.style.transform = `translate(${cx - p.size / 2}px, ${cy - p.size / 2}px)`;
+    const cell = document.elementFromPoint(cx, cy)?.closest('.cell');
+    const idx = cell && this.boardTarget.contains(cell) ? +cell.dataset.idx : null;
+    if (idx !== p.hover) {
+      this.boardTarget.querySelectorAll('.hover,.hover-bad').forEach(c => c.classList.remove('hover', 'hover-bad'));
+      if (cell && idx !== null && !game.board[idx]) cell.classList.add(p.legal.has(idx) ? 'hover' : 'hover-bad');
+      p.hover = idx;
+    }
+  }
+  end() {
+    window.removeEventListener('pointermove', this.mv);
+    window.removeEventListener('pointerup', this.up);
+    window.removeEventListener('pointercancel', this.up);
+    const p = this.p;
+    this.p = null;
+    if (!p) return;
+    if (!p.moved) { this.or[p.i].rot = (this.or[p.i].rot + 1) % 4; return this.render(); }
+    p.el.remove();
+    const o = this.or[p.i];
+    if (p.hover !== null && p.legal.has(p.hover)) game.place(p.i, o.face, o.rot, p.hover);
+    else this.render();
+  }
+}
+
+class SpotController extends Variant {
+  static targets = ['board', 'sheet', 'tray'];
+  resetUI() { this.selCell = null; this.peekOpt = null; }
+  render() {
+    this.opts = game.options();
+    this.byCell = {};
+    this.opts.forEach((o, k) => (this.byCell[o.i] ||= []).push(k));
+    this.renderBoard();
+    this.trayTarget.innerHTML = game.hand.map((ht, h) => {
+      const n = this.opts.filter(o => o.h === h).length;
+      return `<div class="hand ${n ? '' : 'nofit'}" style="cursor:default"><div class="mini">${tileSVG(orient(ht, 0, 0))}${tileSVG(orient(ht, 1, 0))}</div><span class="cap">Tile ${h + 1} · ${TILES[ht][0]}<br>front / back · ${n ? n + ' ways' : 'no spot'}</span></div>`;
+    }).join('') || '<p class="hint">No tiles in hand.</p>';
+    if (this.selCell === null) {
+      this.sheetTarget.innerHTML = `<p class="hint">Tap a green cell. The number is how many ways one of your two tiles fits there. You never rotate by hand.</p>`;
+    } else {
+      const ks = this.byCell[this.selCell] || [];
+      this.sheetTarget.innerHTML = [0, 1].map(h => {
+        const mine = ks.filter(k => this.opts[k].h === h);
+        if (!mine.length) return '';
+        return `<div class="group"><h3>Tile ${h + 1}</h3><div class="opts">${mine.map(k => `<button type="button" class="opt" data-action="click->spot#choose mouseenter->spot#peek focus->spot#peek mouseleave->spot#unpeek" data-spot-k-param="${k}" aria-label="Place tile ${h + 1}, ${this.opts[k].face ? 'back' : 'front'}, ${this.opts[k].rot * 90} degrees">${tileSVG(this.opts[k].parts)}</button>`).join('')}</div></div>`;
+      }).join('') + '<p class="hint">Hover or focus an option to preview it on the board. Tap to place.</p>';
+    }
+    if (this.active) showState({ variant: 'spot', cellsWithOptions: Object.keys(this.byCell).length, totalOptions: this.opts.length, selectedCell: this.selCell, optionsHere: this.selCell === null ? null : (this.byCell[this.selCell] || []).length });
+  }
+  renderBoard() {
+    const badge = {};
+    for (const i in this.byCell) badge[i] = this.byCell[i].length;
+    const o = this.peekOpt !== null ? this.opts[this.peekOpt] : null;
+    this.boardTarget.innerHTML = boardHTML('spot', { legal: new Set(Object.keys(this.byCell).map(Number)), badge, selected: this.selCell, ghost: o ? { i: o.i, parts: o.parts } : null });
+  }
+  cell({ params: { idx } }) {
+    if (!this.byCell[idx]) return;
+    this.selCell = idx; this.peekOpt = null;
+    this.render();
+  }
+  peek({ params: { k } }) { this.peekOpt = k; this.renderBoard(); }
+  unpeek() { this.peekOpt = null; this.renderBoard(); }
+  choose({ params: { k } }) { const o = this.opts[k]; game.place(o.h, o.face, o.rot, o.i); }
+}
+
+class ComboController extends Variant {
+  static targets = ['board', 'tray', 'place', 'hint'];
+  connect() {
+    super.connect();
+    this.onKey = e => this.key(e);
+    document.addEventListener('keydown', this.onKey);
+  }
+  disconnect() { super.disconnect(); document.removeEventListener('keydown', this.onKey); }
+  resetUI() { this.rot = [[0, 0], [0, 0]]; this.sel = null; this.target = null; this.p = null; }
+  same(a, b) { return a && b && a.h === b.h && a.f === b.f; }
+  legalFor(s) { return game.legalCells(game.hand[s.h], s.f, this.rot[s.h][s.f]); }
+  render() {
+    const s = this.p && this.p.moved ? this.p : this.sel;
+    const legal = s ? this.legalFor(s) : new Set();
+    const ghost = !this.p && this.sel && this.target !== null
+      ? { i: this.target, parts: orient(game.hand[this.sel.h], this.sel.f, this.rot[this.sel.h][this.sel.f]), bad: !legal.has(this.target) } : null;
+    this.boardTarget.innerHTML = boardHTML('combo', { legal, ghost, selected: this.p ? null : this.target });
+    this.trayTarget.innerHTML = game.hand.map((ht, h) => `<div class="pair"><h3>Tile ${h + 1} · ${TILES[ht][0]}</h3><div class="faces">${[0, 1].map(f => {
+      const n = game.legalCells(ht, f, 0).size + game.legalCells(ht, f, 1).size + game.legalCells(ht, f, 2).size + game.legalCells(ht, f, 3).size;
+      const cls = ['hand', this.same(this.sel, { h, f }) ? 'on' : '', this.sel && !this.same(this.sel, { h, f }) ? 'dim' : '', n ? '' : 'nofit'].join(' ');
+      return `<div class="${cls}" tabindex="0" data-h="${h}" data-f="${f}" data-action="pointerdown->combo#down">${tileSVG(orient(ht, f, this.rot[h][f]))}<span class="cap">${f ? 'back' : 'front'}${n ? '' : '<br>no spot'}</span></div>`;
+    }).join('')}</div></div>`).join('') || '<p class="hint">No tiles in hand.</p>';
+    this.placeTarget.disabled = !(ghost && !ghost.bad);
+    this.hintTarget.textContent = !this.sel ? 'Tap a face to see where it fits, or drag it onto the board. Tap a face again to rotate it.'
+      : this.target === null ? `${legal.size} green cells fit this way. Tap the face to rotate, tap a cell to preview, or drag.`
+      : ghost.bad ? 'This way does not fit here. Rotate the face, or tap another cell.'
+      : 'Tap the cell again, or press Place.';
+    if (this.active) showState({ variant: 'combo', selected: this.sel && { tile: this.sel.h + 1, face: this.sel.f ? 'back' : 'front', rot: this.rot[this.sel.h][this.sel.f] * 90 }, target: this.target, legalCells: legal.size, dragging: !!(this.p && this.p.moved) });
+  }
+  down(e) {
+    if (e.button > 0) return;
+    e.preventDefault();
+    const d = e.currentTarget.dataset;
+    this.p = { h: +d.h, f: +d.f, x: e.clientX, y: e.clientY, touch: e.pointerType !== 'mouse', moved: false, hover: null };
+    this.mv = ev => this.move(ev);
+    this.up = ev => this.end(ev);
+    window.addEventListener('pointermove', this.mv);
+    window.addEventListener('pointerup', this.up);
+    window.addEventListener('pointercancel', this.up);
+  }
+  move(ev) {
+    const p = this.p;
+    if (!p) return;
+    if (!p.moved && Math.hypot(ev.clientX - p.x, ev.clientY - p.y) < 8) return;
+    if (!p.moved) {
+      p.moved = true;
+      p.legal = this.legalFor(p);
+      this.render();
+      p.size = this.boardTarget.querySelector('.cell').getBoundingClientRect().width;
+      p.el = document.createElement('div');
+      p.el.className = 'floater';
+      p.el.style.width = p.el.style.height = p.size + 'px';
+      p.el.innerHTML = tileSVG(orient(game.hand[p.h], p.f, this.rot[p.h][p.f]));
+      document.body.appendChild(p.el);
+    }
+    const off = p.touch ? p.size * 1.1 : 0, cx = ev.clientX, cy = ev.clientY - off;
+    p.el.style.transform = `translate(${cx - p.size / 2}px, ${cy - p.size / 2}px)`;
+    const cell = document.elementFromPoint(cx, cy)?.closest('.cell');
+    const idx = cell && this.boardTarget.contains(cell) ? +cell.dataset.idx : null;
+    if (idx !== p.hover) {
+      this.boardTarget.querySelectorAll('.hover,.hover-bad').forEach(c => c.classList.remove('hover', 'hover-bad'));
+      if (cell && idx !== null && !game.board[idx]) cell.classList.add(p.legal.has(idx) ? 'hover' : 'hover-bad');
+      p.hover = idx;
+    }
+  }
+  end() {
+    window.removeEventListener('pointermove', this.mv);
+    window.removeEventListener('pointerup', this.up);
+    window.removeEventListener('pointercancel', this.up);
+    const p = this.p;
+    this.p = null;
+    if (!p) return;
+    if (!p.moved) {
+      if (this.same(this.sel, p)) this.rot[p.h][p.f] = (this.rot[p.h][p.f] + 1) % 4;
+      else { this.sel = { h: p.h, f: p.f }; this.target = null; }
+      return this.render();
+    }
+    p.el.remove();
+    if (p.hover !== null && p.legal.has(p.hover)) game.place(p.h, p.f, this.rot[p.h][p.f], p.hover);
+    else this.render();
+  }
+  cell({ params: { idx } }) {
+    if (!this.sel || game.board[idx]) return;
+    const legal = this.legalFor(this.sel).has(idx);
+    if (this.target === idx && legal) return this.place();
+    this.target = legal ? idx : null;
+    this.render();
+  }
+  place() {
+    if (!this.sel || this.target === null) return;
+    game.place(this.sel.h, this.sel.f, this.rot[this.sel.h][this.sel.f], this.target);
+  }
+  key(e) {
+    if (!this.active || e.target.closest('input,textarea,[contenteditable]')) return;
+    if ((e.key === 'r' || e.key === 'R') && this.sel) { this.rot[this.sel.h][this.sel.f] = (this.rot[this.sel.h][this.sel.f] + 1) % 4; this.render(); }
+    else if (e.key === 'Enter' && this.target !== null) { e.preventDefault(); this.place(); }
+  }
+}
+
+class SwitcherController extends Stimulus.Controller {
+  static targets = ['variant', 'label'];
+  connect() {
+    const keys = this.variantTargets.map(v => v.dataset.key);
+    let h = '';
+    try { h = location.hash.slice(1); } catch (e) {}
+    this.idx = Math.max(0, keys.indexOf(h));
+    this.onKey = e => {
+      if (e.target.closest('input,textarea,[contenteditable]')) return;
+      if (e.key === 'ArrowLeft') this.prev();
+      if (e.key === 'ArrowRight') this.next();
+    };
+    document.addEventListener('keydown', this.onKey);
+    this.show();
+  }
+  disconnect() { document.removeEventListener('keydown', this.onKey); }
+  prev() { this.idx = (this.idx + this.variantTargets.length - 1) % this.variantTargets.length; this.show(); }
+  next() { this.idx = (this.idx + 1) % this.variantTargets.length; this.show(); }
+  show() {
+    this.variantTargets.forEach((v, i) => { v.hidden = i !== this.idx; });
+    const v = this.variantTargets[this.idx];
+    this.labelTarget.textContent = `${'DABC'[this.idx]} · ${v.dataset.name}`;
+    try { history.replaceState(null, '', '#' + v.dataset.key); } catch (e) {}
+    document.dispatchEvent(new CustomEvent('ui:refresh'));
+  }
+}
+
+const game = new Game();
+app.register('combo', ComboController);
+app.register('tap', TapController);
+app.register('drag', DragController);
+app.register('spot', SpotController);
+app.register('switcher', SwitcherController);
+</script>

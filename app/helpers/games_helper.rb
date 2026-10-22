@@ -6,29 +6,35 @@ module GamesHelper
     "stuck" => "Neither drawn tile has a legal placement."
   }.freeze
 
-  def status_line(engine, me)
-    return result_line(engine, me) if engine.ended?
+  def player_name(seat, me, hot_seat: false)
+    return "Player #{seat}" if hot_seat
+
+    seat == me ? "You" : "Opponent"
+  end
+
+  def status_line(engine, me, hot_seat: false)
+    return result_line(engine, me, hot_seat:) if engine.ended?
     return "Opponent's turn." unless engine.turn == me
 
+    who = player_name(me, me, hot_seat:)
     case engine.phase
     when "awaiting_draw"
-      engine.can_play_reserve? ? "Your turn. Draw from the bag, or place your reserve tile." : "Your turn. Draw from the bag."
-    when "awaiting_place" then "Place one of your tiles."
-    when "awaiting_species" then "You completed a cat and a dog. Choose your species."
-    when "awaiting_reserve_action" then "You completed an animal. Take a tile from the discard pile into your reserve, or skip."
+      turn = hot_seat ? "#{who}'s turn" : "Your turn"
+      engine.can_play_reserve? ? "#{turn}. Draw from the bag, or place your reserve tile." : "#{turn}. Draw from the bag."
+    when "awaiting_place" then hot_seat ? "#{who}: place one of your tiles." : "Place one of your tiles."
+    when "awaiting_species" then "#{who} completed a cat and a dog. Choose your species."
+    when "awaiting_reserve_action" then "#{who} completed an animal. Take a tile from the discard pile into your reserve, or skip."
     end
   end
 
-  def result_line(engine, me)
+  def result_line(engine, me, hot_seat: false)
     winner = engine.winner
-    result = if winner.nil? then "The game is a draw."
-    elsif winner == me then "You won."
-    else "Opponent won."
-    end
+    result = winner.nil? ? "The game is a draw." : "#{player_name(winner, me, hot_seat:)} won."
     ending = engine.state.ending
-    reason = if ending.fetch("reason") != "resign" then END_REASONS.fetch(ending.fetch("reason"))
-    elsif ending.fetch("seat") == me then "You resigned."
-    else "Opponent resigned."
+    reason = if ending.fetch("reason") == "resign"
+      "#{player_name(ending.fetch("seat"), me, hot_seat:)} resigned."
+    else
+      END_REASONS.fetch(ending.fetch("reason"))
     end
     "#{result} #{reason}"
   end

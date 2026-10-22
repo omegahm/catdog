@@ -128,4 +128,35 @@ class GameTest < ActiveSupport::TestCase
     assert_equal game.replay.state.as_json, game.state
     assert_equal game.state_seq, game.moves.last.seq
   end
+
+  test "playing here takes seat 2 in the same browser and starts a hot-seat game" do
+    game = Game.create_with_seat!("host")
+    game.play_here!
+
+    assert game.hot_seat?
+    assert game.playing?
+    assert_equal [ 1, 2 ], game.seats.map(&:position)
+    assert_raises(Game::NotAllowed) { game.play_here! }
+    assert_raises(Game::NotAllowed) { game.join!("late") }
+  end
+
+  test "in a hot-seat game the acting seat is the seat on turn" do
+    game = Game.create_with_seat!("host").tap(&:play_here!)
+    seat = game.seats.first
+
+    assert_equal game.turn_seat, game.acting_position(seat)
+    game.play!(seat_position: game.acting_position(seat), kind: "draw", seq: 0)
+    assert_equal 1, game.moves.count
+  end
+
+  test "a hot-seat rematch starts at once as a hot-seat game" do
+    game = Game.create_with_seat!("host").tap(&:play_here!)
+    game.play!(seat_position: game.turn_seat, kind: "resign", seq: 0)
+    game.offer_rematch!(1)
+
+    rematch = game.reload.rematch_game
+    assert rematch.playing?
+    assert rematch.hot_seat?
+    assert_nil game.rematch_offered_by
+  end
 end

@@ -15,13 +15,17 @@
   <% if @game.lobby? %>
     <p id="status">Waiting for your opponent.</p>
     <%= render "copy_field", id: "invite-link", label: "Invite link", value: game_url(@game) %>
+    <div class="row">
+      <span>Or play both seats on this screen:</span>
+      <%= button_to "Play here instead", game_hot_seat_path(@game), id: "play-here", class: "button" %>
+    </div>
   <% else %>
-    <p id="status" class="turn"><%= status_line(@engine, @seat.position) %></p>
-    <%= render "table", game: @game, engine: @engine, me: @seat.position, opponent_online: opponent_seat&.online? %>
+    <p id="status" class="turn"><%= status_line(@engine, @me, hot_seat: @game.hot_seat?) %></p>
+    <%= render "table", game: @game, engine: @engine, me: @me, hot_seat: @game.hot_seat?, opponent_online: opponent_seat&.online? %>
   <% end %>
 
   <% if @game.playing? %>
-    <%= button_to "Resign", game_moves_path(@game), params: { kind: "resign", seq: @game.state_seq }, id: "resign", class: "button danger", form: { data: { turbo_confirm: "Resign this game? Your opponent wins at once." } } %>
+    <%= button_to "Resign", game_moves_path(@game), params: { kind: "resign", seq: @game.state_seq }, id: "resign", class: "button danger", form: { data: { turbo_confirm: @game.hot_seat? ? "Resign for Player #{@me}? Player #{Rules.opponent(@me)} wins at once." : "Resign this game? Your opponent wins at once." } } %>
   <% end %>
 
   <% if @game.ended? %>
@@ -31,6 +35,8 @@
           <div data-controller="visit" data-visit-url-value="<%= game_rematch_path(@game) %>"></div>
         <% end %>
         <%= link_to "Go to the rematch", game_rematch_path(@game), class: "button primary" %>
+      <% elsif @game.hot_seat? %>
+        <%= button_to "Rematch", game_rematch_path(@game), class: "button primary" %>
       <% elsif @game.rematch_offered_by == @seat.position %>
         <span>You offered a rematch.</span>
         <%= button_to "Withdraw", game_rematch_path(@game), method: :delete, class: "button" %>

@@ -33,8 +33,24 @@ class Game < ApplicationRecord
     raise NotAllowed, "the game is full"
   end
 
+  def play_here!
+    transaction do
+      reload
+      raise NotAllowed, "the game is full" unless lobby? && seats.size < 2
+
+      seats.create!(position: 2, token: SecureRandom.base58(32))
+      update!(hot_seat: true)
+      start!
+    end
+  rescue ActiveRecord::RecordNotUnique
+    raise NotAllowed, "the game is full"
+  end
+
+  def acting_position(seat) = hot_seat? ? turn_seat : seat.position
+
   def offer_rematch!(position)
     raise NotAllowed, "a rematch is already offered" unless ended? && rematch_offered_by.nil? && rematch_game.nil?
+    return transaction { create_rematch! } if hot_seat?
 
     update!(rematch_offered_by: position)
   end
@@ -50,11 +66,7 @@ class Game < ApplicationRecord
       reload
       raise NotAllowed, "there is no rematch offer to accept" unless rematch_offered_by == Rules.opponent(position) && rematch_game.nil?
 
-      Game.create!(tile_sets:).tap do |rematch|
-        seats.each { rematch.seats.create!(position: it.position, token_digest: it.token_digest) }
-        rematch.start!
-        update!(rematch_game: rematch)
-      end
+      create_rematch!
     end
   end
 
@@ -104,6 +116,14 @@ class Game < ApplicationRecord
     end
   rescue ActiveRecord::RecordNotUnique
     raise StaleMove, "another move took seq #{seq + 1}"
+  end
+
+  def create_rematch!
+    Game.create!(tile_sets:, hot_seat:).tap do |rematch|
+      seats.each { rematch.seats.create!(position: it.position, token_digest: it.token_digest) }
+      rematch.start!
+      update!(rematch_game: rematch)
+    end
   end
 
   def last_placed_cell = moves.where(kind: "place").last&.data&.fetch("cell")

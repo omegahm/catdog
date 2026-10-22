@@ -15,7 +15,7 @@ class Games::RematchesController < ApplicationController
 
   def create
     @game.offer_rematch!(@seat.position)
-    redirect_to @game, status: :see_other
+    redirect_to @game.hot_seat? ? game_rematch_path(@game) : @game, status: :see_other
   end
 
   def destroy

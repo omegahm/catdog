@@ -4,6 +4,7 @@ Rails.application.routes.draw do
   resources :games, only: %i[create show] do
     scope module: :games do
       resource :join, only: :create
+      resource :hot_seat, only: :create
       resources :moves, only: :create
       resource :seat_link, only: :show, path: "seat"
       resource :rematch, only: %i[show create destroy]

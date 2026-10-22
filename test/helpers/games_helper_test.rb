@@ -23,6 +23,13 @@ class GamesHelperTest < ActionView::TestCase
     assert_equal "CatDog", page_title(engine, 2, hot_seat: true)
   end
 
+  test "the animal lengths show one chip per complete animal in the seat's species colour" do
+    engine = game_with([], board: { [ 3, 3 ] => "cat tail e", [ 3, 4 ] => "cat head w" }, species: { 1 => "cat", 2 => "dog" })
+
+    assert_dom_equal '<span id="mine" class="lengths cat"><span class="length">2</span></span>', animal_lengths(engine, 1, id: "mine")
+    assert_dom_equal '<span class="lengths dog"><span class="cap">none</span></span>', animal_lengths(engine, 2)
+  end
+
   test "the lobby and an ended game have a neutral turn bar" do
     ended = game_with([], phase: "ended", ending: { "reason" => "bag_exhausted" })
 

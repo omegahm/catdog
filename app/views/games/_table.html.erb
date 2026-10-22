@@ -7,9 +7,9 @@
 <div class="table" data-controller="board reserve" data-board-legal-value="<%= placements.to_json %>" data-board-seq-value="<%= game.state_seq %>">
   <section class="strip opp<%= " active" if engine.acting_seat == opponent && !engine.ended? %>" id="opponent">
     <span class="who">
-      <%= player_name(opponent, me, hot_seat:) %>
+      <span class="name"><%= player_name(opponent, me, hot_seat:) %></span>
       <% unless hot_seat %><span class="presence<%= " online" if opponent_online %>" id="presence" data-presence-target="indicator"><%= opponent_online ? "● online" : "○ offline" %></span><% end %>
-      · <%= species_label(engine, opponent) %>
+      <span class="species <%= state.species[opponent] %>"><%= species_label(engine, opponent) %></span>
     </span>
     <div class="grp"><span class="label">Reserve</span><%= reserve_slot(tiles, state.reserves[opponent]) %></div>
     <% if engine.turn == opponent && state.phase == "awaiting_place" %>
@@ -18,7 +18,7 @@
         <div class="pile"><% state.drawn.each do |id| %><span class="dtile"><%= tile_pair(tiles, id) %></span><% end %></div>
       </div>
     <% end %>
-    <div class="grp"><span class="label">Animals</span><span class="cap" id="opponent-animals"><%= complete_lengths(engine, opponent).join(" · ").presence || "none" %></span></div>
+    <div class="grp"><span class="label">Animals</span><%= animal_lengths(engine, opponent, id: "opponent-animals") %></div>
   </section>
 
   <div class="board" data-board-target="board" id="board">
@@ -33,7 +33,7 @@
   </div>
 
   <section class="strip mine<%= " active" if my_turn %>" id="me">
-    <span class="who" id="me-name"><%= player_name(me, me, hot_seat:) %> · <%= species_label(engine, me) %><% if my_turn && !hot_seat %> <span class="turn-tag">▶ Your turn</span><% end %></span>
+    <span class="who" id="me-name"><span class="name"><%= player_name(me, me, hot_seat:) %></span> <span class="species <%= state.species[me] %>"><%= species_label(engine, me) %></span><% if my_turn && !hot_seat %> <span class="turn-tag">▶ Your turn</span><% end %></span>
     <div class="grp">
       <span class="label">Reserve</span>
       <% if my_turn && state.phase == "awaiting_draw" && engine.can_play_reserve? %>
@@ -113,7 +113,7 @@
       <% end %>
     </div>
 
-    <div class="grp"><span class="label">Animals</span><span class="cap" id="my-animals"><%= complete_lengths(engine, me).join(" · ").presence || "none" %></span></div>
+    <div class="grp"><span class="label">Animals</span><%= animal_lengths(engine, me, id: "my-animals") %></div>
   </section>
 
   <p class="hint" data-board-target="hint"></p>

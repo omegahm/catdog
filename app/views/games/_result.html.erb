@@ -1,7 +1,7 @@
 <% left = hot_seat ? 1 : me %>
 <% right = Rules.opponent(left) %>
 <section class="result" id="result">
-  <p id="result-reason"><%= ending_line(engine, me, hot_seat:) %></p>
+  <p class="reason" id="result-reason"><%= ending_line(engine, me, hot_seat:) %></p>
   <% unless resigned?(engine) %>
     <% rows = score_rows(engine, left) %>
     <% if rows.empty? %>

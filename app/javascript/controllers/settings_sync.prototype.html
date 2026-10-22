@@ -1,0 +1,258 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Settings sync prototype</title>
+<style>
+  :root { --accent: #c2410c; --ink: #1c1917; --mute: #78716c; --line: #e7e5e4; --bg: #fafaf9; --card: #fff; --hi: #fff7ed; }
+  * { box-sizing: border-box; }
+  body { margin: 0; font: 15px/1.5 system-ui, sans-serif; color: var(--ink); background: var(--bg); }
+  main { max-width: 1040px; margin: 0 auto; padding: 24px 16px 64px; }
+  h1 { margin: 0 0 4px; font-size: 24px; }
+  h2 { font-size: 16px; margin: 28px 0 10px; }
+  p.lead { margin: 0 0 8px; color: var(--mute); max-width: 72ch; }
+  .tag { display: inline-block; font-size: 12px; padding: 1px 8px; border-radius: 99px; background: var(--hi); color: var(--accent); border: 1px solid #fed7aa; }
+  .rules { display: flex; gap: 8px; flex-wrap: wrap; }
+  .rules label { border: 1px solid var(--line); background: var(--card); border-radius: 8px; padding: 8px 12px; cursor: pointer; max-width: 320px; }
+  .rules label.on { border-color: var(--accent); background: var(--hi); }
+  .rules small { display: block; color: var(--mute); }
+  .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 12px; }
+  .card { background: var(--card); border: 1px solid var(--line); border-radius: 10px; padding: 14px; }
+  .card h3 { margin: 0 0 8px; font-size: 15px; display: flex; justify-content: space-between; }
+  table { width: 100%; border-collapse: collapse; font-size: 14px; }
+  td { padding: 3px 0; border-bottom: 1px dashed var(--line); }
+  td:first-child { color: var(--mute); width: 45%; }
+  td.changed { background: var(--hi); font-weight: 600; }
+  .unset { color: #a8a29e; font-style: italic; }
+  .sub { font-size: 12px; color: var(--mute); margin: 10px 0 2px; text-transform: uppercase; letter-spacing: .04em; }
+  button { font: inherit; border: 1px solid var(--line); background: var(--card); border-radius: 6px; padding: 5px 10px; cursor: pointer; margin: 3px 3px 0 0; }
+  button:hover { border-color: var(--accent); }
+  button.primary { background: var(--accent); color: #fff; border-color: var(--accent); }
+  button:disabled { opacity: .4; cursor: default; }
+  .log { font-size: 13px; color: var(--mute); max-height: 160px; overflow: auto; background: var(--card); border: 1px solid var(--line); border-radius: 8px; padding: 8px 12px; }
+  .log div:first-child { color: var(--ink); font-weight: 600; }
+  .tabs { display: flex; gap: 4px; flex-wrap: wrap; border-bottom: 1px solid var(--line); }
+  .tabs button { border-radius: 6px 6px 0 0; margin: 0; border-bottom: none; }
+  .tabs button.on { background: var(--hi); border-color: var(--accent); }
+  .scenario { background: var(--card); border: 1px solid var(--line); border-top: none; padding: 14px; border-radius: 0 0 10px 10px; }
+  .steps button.done { text-decoration: line-through; opacity: .5; }
+  .steps button.next { border-color: var(--accent); }
+</style>
+</head>
+<body>
+<main>
+  <h1>Settings sync <span class="tag">PROTOTYPE, throw away</span></h1>
+  <p class="lead"><b>Question:</b> a player has 4 settings (art style, cat colour, dog colour, auto-draw). A guest keeps them in the browser. An account keeps them on the server. When a player signs up or signs in and the browser and the account do not agree, which one wins? And what happens on sign-out?</p>
+  <p class="lead">Two devices, one account. Pick a rule, then press buttons. Highlighted cells changed in the last step. "Not set" means the player never touched the settings there (the game shows the defaults).</p>
+
+  <h2>Rule at sign-in / sign-up</h2>
+  <div class="rules" id="rules"></div>
+
+  <h2>State</h2>
+  <div class="grid" id="state"></div>
+
+  <h2>What happened</h2>
+  <div class="log" id="log"></div>
+
+  <h2>Free play</h2>
+  <div class="grid" id="play"></div>
+
+  <h2>Guided walkthroughs</h2>
+  <div class="tabs" id="tabs"></div>
+  <div class="scenario" id="scenario"></div>
+</main>
+
+<script>
+// ---- Pure logic: liftable ----------------------------------------------------
+const KEYS = ["style", "cat", "dog", "autoDraw"];
+const DEFAULTS = { style: "fur", cat: "orange", dog: "blue", autoDraw: true };
+const EMPTY = { style: null, cat: null, dog: null, autoDraw: null, at: null };
+
+const RULES = {
+  account: { name: "Account wins", help: "If the account has settings, the browser takes them. If not (new account), the account takes the browser's." },
+  browser: { name: "Browser wins", help: "If the browser has settings, the account takes them. If not, the browser takes the account's." },
+  newest:  { name: "Newest change wins", help: "Whichever side was changed last wins. Needs a timestamp in localStorage and on the account." },
+};
+
+function isSet(s) { return s && s.at !== null; }
+function effective(s) { return isSet(s) ? pick(s) : { ...DEFAULTS }; }
+function pick(s) { return { style: s.style, cat: s.cat, dog: s.dog, autoDraw: s.autoDraw }; }
+
+function merge(rule, browser, account) {
+  if (!isSet(browser) && !isSet(account)) return null;
+  if (!isSet(account)) return browser;
+  if (!isSet(browser)) return account;
+  if (rule === "account") return account;
+  if (rule === "browser") return browser;
+  return browser.at > account.at ? browser : account;
+}
+
+function init() {
+  return {
+    clock: 0,
+    account: null,
+    devices: {
+      laptop: { name: "Laptop", browser: { ...EMPTY }, signedIn: false },
+      phone:  { name: "Phone",  browser: { ...EMPTY }, signedIn: false },
+    },
+    log: [],
+  };
+}
+
+function reduce(state, action) {
+  const s = structuredClone(state);
+  s.clock++;
+  const d = s.devices[action.device];
+  const say = (m) => s.log.unshift(`${d ? d.name + ": " : ""}${m}`);
+
+  switch (action.type) {
+    case "change": {
+      const current = d.signedIn ? effective(s.account.settings) : effective(d.browser);
+      const next = { ...current, ...action.patch, at: s.clock };
+      if (next.cat === next.dog) {
+        if ("cat" in action.patch) next.dog = current.cat; else next.cat = current.dog;
+      }
+      d.browser = next;
+      if (d.signedIn) { s.account.settings = { ...next }; say(`changed ${describe(action.patch)}; saved to browser and account`); }
+      else say(`changed ${describe(action.patch)}; saved to browser only`);
+      break;
+    }
+    case "signUp":
+    case "signIn": {
+      if (action.type === "signUp") s.account = { settings: { ...EMPTY } };
+      const won = merge(action.rule, d.browser, s.account.settings);
+      const from = won === null ? "nobody (both not set)" : won === d.browser ? "browser" : "account";
+      if (won) { s.account.settings = { ...won }; d.browser = { ...won }; }
+      d.signedIn = true;
+      say(`${action.type === "signUp" ? "signed up" : "signed in"}; ${from} won (${RULES[action.rule].name})`);
+      break;
+    }
+    case "signOut": {
+      d.signedIn = false;
+      say("signed out; browser keeps the last settings");
+      break;
+    }
+    case "reload": {
+      if (d.signedIn) { d.browser = { ...s.account.settings }; say("loaded a page; server sends account settings, browser copy refreshed"); }
+      else say("loaded a page; browser settings used");
+      break;
+    }
+    case "clear": {
+      d.browser = { ...EMPTY }; d.signedIn = false;
+      say("cleared site data (new browser)");
+      break;
+    }
+  }
+  return s;
+}
+
+function describe(patch) { return Object.entries(patch).map(([k, v]) => `${k} → ${v}`).join(", "); }
+
+// ---- Throwaway page ------------------------------------------------------------
+let rule = "account";
+let state = init();
+let prev = state;
+let tab = 0, stepAt = 0;
+
+const SCENARIOS = [
+  { title: "Happy path: sign up, then a new device",
+    text: "A guest picks line style on the laptop, signs up, then signs in on a fresh phone. Watch: the phone gets the laptop's settings. All three rules agree here.",
+    steps: [["Laptop: pick line style", { type: "change", device: "laptop", patch: { style: "line" } }],
+            ["Laptop: sign up", { type: "signUp", device: "laptop" }],
+            ["Phone: sign in", { type: "signIn", device: "phone" }]] },
+  { title: "Conflict: guest changes before sign-in",
+    text: "The account already has line style. On the phone, as a guest, the player picks a teal cat, then signs in. Watch which wins. With 'Account wins' the teal cat is lost silently. With 'Browser wins' the account loses line style... but only if the phone had any settings at all.",
+    steps: [["Laptop: pick line style", { type: "change", device: "laptop", patch: { style: "line" } }],
+            ["Laptop: sign up", { type: "signUp", device: "laptop" }],
+            ["Phone: pick a teal cat", { type: "change", device: "phone", patch: { cat: "teal" } }],
+            ["Phone: sign in", { type: "signIn", device: "phone" }]] },
+  { title: "Trap: an old browser overwrites the account",
+    text: "The player set up the phone months ago as a guest and forgot. Since then the account changed on the laptop. Now they sign in on the phone. 'Browser wins' and even 'Newest wins' can be fine or bad here; switch rules and replay.",
+    steps: [["Phone: pick line style (long ago)", { type: "change", device: "phone", patch: { style: "line" } }],
+            ["Laptop: sign up", { type: "signUp", device: "laptop" }],
+            ["Laptop: pick line style", { type: "change", device: "laptop", patch: { style: "line" } }],
+            ["Phone: sign in", { type: "signIn", device: "phone" }]] },
+  { title: "Two devices signed in at once",
+    text: "Both devices are signed in. A change on the laptop goes to the account. The phone shows it only after its next page load. The browser copy is just a cache so the page paints with the right colours before the server answers.",
+    steps: [["Laptop: sign up", { type: "signUp", device: "laptop" }],
+            ["Phone: sign in", { type: "signIn", device: "phone" }],
+            ["Laptop: turn auto-draw off", { type: "change", device: "laptop", patch: { autoDraw: false } }],
+            ["Phone: load a page", { type: "reload", device: "phone" }]] },
+  { title: "Sign out, then play as a guest",
+    text: "After sign-out the browser keeps the account's settings. A guest change after that stays in the browser. On the next sign-in the rule decides again.",
+    steps: [["Laptop: pick line style", { type: "change", device: "laptop", patch: { style: "line" } }],
+            ["Laptop: sign up", { type: "signUp", device: "laptop" }],
+            ["Laptop: sign out", { type: "signOut", device: "laptop" }],
+            ["Laptop: pick a magenta dog", { type: "change", device: "laptop", patch: { dog: "magenta" } }],
+            ["Laptop: sign in", { type: "signIn", device: "laptop" }]] },
+];
+
+function dispatch(action) {
+  prev = state;
+  state = reduce(state, { rule, ...action });
+  render();
+}
+
+function settingsTable(s, before) {
+  const unset = !isSet(s);
+  const eff = effective(s);
+  const beff = before ? effective(before) : null;
+  const rows = KEYS.map(k => {
+    const changed = beff && (beff[k] !== eff[k] || isSet(before) !== isSet(s));
+    const val = unset ? `<span class="unset">not set (${fmt(DEFAULTS[k])})</span>` : fmt(eff[k]);
+    return `<tr><td>${label(k)}</td><td class="${changed ? "changed" : ""}">${val}</td></tr>`;
+  });
+  return `<table>${rows.join("")}<tr><td>Last changed</td><td>${unset ? "—" : "step " + s.at}</td></tr></table>`;
+}
+function label(k) { return { style: "Art style", cat: "Cat colour", dog: "Dog colour", autoDraw: "Auto-draw" }[k]; }
+function fmt(v) { return v === true ? "on" : v === false ? "off" : v; }
+
+function render() {
+  document.getElementById("rules").innerHTML = Object.entries(RULES).map(([k, r]) =>
+    `<label class="${k === rule ? "on" : ""}"><input type="radio" name="rule" value="${k}" ${k === rule ? "checked" : ""}> <b>${r.name}</b><small>${r.help}</small></label>`).join("");
+  document.querySelectorAll("[name=rule]").forEach(el => el.onchange = () => { rule = el.value; render(); });
+
+  const cards = Object.entries(state.devices).map(([id, d]) => {
+    const pd = prev.devices[id];
+    const shown = d.signedIn ? state.account.settings : d.browser;
+    const shownBefore = pd.signedIn ? prev.account?.settings : pd.browser;
+    return `<div class="card"><h3>${d.name} <span class="tag">${d.signedIn ? "signed in" : "guest"}</span></h3>
+      <div class="sub">What the game shows</div>${settingsTable(shown, shownBefore)}
+      <div class="sub">Browser storage</div>${settingsTable(d.browser, pd.browser)}</div>`;
+  });
+  cards.push(`<div class="card"><h3>Account <span class="tag">server</span></h3>${
+    state.account ? settingsTable(state.account.settings, prev.account?.settings) : '<p class="unset">No account yet.</p>'}</div>`);
+  document.getElementById("state").innerHTML = cards.join("");
+
+  document.getElementById("log").innerHTML = state.log.length ? state.log.map(l => `<div>${l}</div>`).join("") : '<span class="unset">Nothing yet.</span>';
+
+  document.getElementById("play").innerHTML = Object.entries(state.devices).map(([id, d]) => `
+    <div class="card"><h3>${d.name}</h3>
+      <button data-a='{"type":"change","device":"${id}","patch":{"style":"line"}}'>Line style</button>
+      <button data-a='{"type":"change","device":"${id}","patch":{"style":"fur"}}'>Fur bands</button>
+      <button data-a='{"type":"change","device":"${id}","patch":{"cat":"teal"}}'>Teal cat</button>
+      <button data-a='{"type":"change","device":"${id}","patch":{"dog":"magenta"}}'>Magenta dog</button>
+      <button data-a='{"type":"change","device":"${id}","patch":{"autoDraw":false}}'>Auto-draw off</button>
+      <br>
+      <button class="primary" ${state.account || d.signedIn ? "disabled" : ""} data-a='{"type":"signUp","device":"${id}"}'>Sign up</button>
+      <button class="primary" ${!state.account || d.signedIn ? "disabled" : ""} data-a='{"type":"signIn","device":"${id}"}'>Sign in</button>
+      <button ${!d.signedIn ? "disabled" : ""} data-a='{"type":"signOut","device":"${id}"}'>Sign out</button>
+      <button data-a='{"type":"reload","device":"${id}"}'>Load a page</button>
+      <button data-a='{"type":"clear","device":"${id}"}'>Clear site data</button>
+    </div>`).join("") + `<div class="card"><h3>Reset</h3><button onclick="state=init();prev=state;stepAt=0;render()">Start over</button></div>`;
+  document.querySelectorAll("#play [data-a]").forEach(b => b.onclick = () => dispatch(JSON.parse(b.dataset.a)));
+
+  document.getElementById("tabs").innerHTML = SCENARIOS.map((sc, i) => `<button class="${i === tab ? "on" : ""}" data-t="${i}">${i + 1}. ${sc.title}</button>`).join("");
+  document.querySelectorAll("[data-t]").forEach(b => b.onclick = () => { tab = +b.dataset.t; state = init(); prev = state; stepAt = 0; render(); });
+  const sc = SCENARIOS[tab];
+  document.getElementById("scenario").innerHTML = `<p>${sc.text}</p><div class="steps">${sc.steps.map(([t], i) =>
+    `<button data-s="${i}" class="${i < stepAt ? "done" : i === stepAt ? "next" : ""}" ${i !== stepAt ? "disabled" : ""}>${i + 1}. ${t}</button>`).join("")}
+    <button onclick="state=init();prev=state;stepAt=0;render()">Replay</button></div>`;
+  document.querySelectorAll("[data-s]").forEach(b => b.onclick = () => { stepAt++; dispatch(sc.steps[+b.dataset.s][1]); });
+}
+
+render();
+</script>
+</body>
+</html>

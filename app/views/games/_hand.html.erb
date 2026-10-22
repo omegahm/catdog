@@ -1,0 +1,11 @@
+<div class="pair">
+  <div class="faces">
+    <% Rules::FACES.each do |face| %>
+      <% fits = face_fits?(placements, tile_id, face) %>
+      <div class="hand<%= " nofit" unless fits %>" id="hand-<%= tile_id %>-<%= face %>" tabindex="0" data-board-target="hand" data-tile="<%= tile_id %>" data-face="<%= face %>" data-action="pointerdown->board#down">
+        <%= tile_face(tiles, tile_id, face) %>
+        <span class="cap"><%= face %><% unless fits %><br>no spot<% end %></span>
+      </div>
+    <% end %>
+  </div>
+</div>

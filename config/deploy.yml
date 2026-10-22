@@ -1,0 +1,41 @@
+service: catdog
+image: catdog
+
+servers:
+  web:
+    - catdog.fidusmaskine.dk
+
+proxy:
+  ssl: true
+  host: catdog.fidusmaskine.dk
+  app_port: 80
+  healthcheck:
+    path: /up
+    interval: 5
+    timeout: 60
+
+registry:
+  server: registry.fidusmaskine.dk
+  username: registry
+  password:
+    - KAMAL_REGISTRY_PASSWORD
+
+env:
+  clear:
+    RAILS_ENV: production
+    SOLID_QUEUE_IN_PUMA: "1"
+    RAILS_LOG_LEVEL: info
+    APP_HOST: catdog.fidusmaskine.dk
+  secret:
+    - RAILS_MASTER_KEY
+
+volumes:
+  - /var/lib/catdog:/rails/storage
+
+asset_path: /rails/public/assets
+
+builder:
+  arch: arm64
+
+ssh:
+  user: root

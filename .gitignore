@@ -67,3 +67,14 @@ yarn-debug.log*
 /storage/*
 !/storage/.keep
 /public/uploads
+
+# Rails
+/config/*.key
+/storage/*
+!/storage/.keep
+/tmp/storage/*
+!/tmp/storage/
+!/tmp/storage/.keep
+/public/assets
+/tmp/pids/*
+!/tmp/pids/.keep

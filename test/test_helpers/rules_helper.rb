@@ -29,10 +29,10 @@ module RulesHelper
     layout.transform_values { Rules::Board::Placement.new(tile_id: it, face: "front", rotation: 0) }
   end
 
-  def game_with(bag, board: {}, first_seat: 1, **changes)
+  def game_with(bag, board: {}, first_seat: 1, rules_version: Rules::RULES_VERSION, **changes)
     tiles = SpecTiles.new(bag + board.values + changes.fetch(:discard, []) + changes.fetch(:reserves, {}).values.compact)
     state = Rules::State.initial(tiles, first_seat).with(bag: bag.sort, board: placements(board), **changes)
-    Rules::Game.new(tiles, state)
+    Rules::Game.new(tiles, state, rules_version:)
   end
 
   def move(seat, kind, **data) = Rules::Move.new(seat:, kind:, data:)

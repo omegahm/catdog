@@ -122,7 +122,7 @@ class GameTest < ActiveSupport::TestCase
         when "awaiting_species" then [ "choose_species", { species: Rules::SPECIES.sample(random:) } ]
         when "awaiting_reserve_action" then [ "reserve_action", { take: engine.state.discard.sample(random:) } ]
         end
-      game.play!(seat_position: engine.turn, kind:, seq: game.state_seq, data:)
+      game.play!(seat_position: engine.acting_seat, kind:, seq: game.state_seq, data:)
     end
 
     assert_equal game.replay.state.as_json, game.state

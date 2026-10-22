@@ -65,7 +65,7 @@ The player who completes the first animal plays as that animal's species. The ot
 If the placement that completes the first animal completes both a cat and a dog, the player who placed the tile chooses their species.
 
 A complete animal belongs to the player who plays as its species, no matter who completed it.
-You may complete your opponent's animals, for example to stop them at a length they do not want.
+You may complete your opponent's animals, for example to stop them at a length they do not want. Your opponent then gets the reserve action.
 
 ## Reserve
 
@@ -74,15 +74,20 @@ The discard pile and both reserves are open. Both players can see all their tile
 
 ### Getting a reserve tile
 
-When your placement completes one or more animals, you get one reserve action.
-This is true for any species, also for the first complete animal.
+When a placement completes one or more animals, one player gets one reserve action:
+
+- If all the completed animals are of one species, the player who plays as that species gets the reserve action. This is true also when the opponent placed the tile.
+- If the placement completes a cat and a dog at the same time, the player who placed the tile gets the reserve action.
+
+The first complete animal sets the species of the player who placed the tile, so that player gets the reserve action.
 
 The order is:
 
 1. Place your tile.
 2. Discard the tile you did not place (if you drew two tiles).
 3. Check for complete animals.
-4. Do your reserve action.
+4. The player who gets the reserve action does it.
+5. The turn goes to the opponent of the player who placed the tile.
 
 In the reserve action, you may take any one tile from the discard pile and put it in your reserve.
 If your reserve already holds a tile, you swap it: your old reserve tile goes to the discard pile.
@@ -96,7 +101,7 @@ If the discard pile is empty, the reserve action does nothing.
 On your turn, you may play your reserve tile instead of drawing from the bag.
 You do not draw and you do not discard. Your reserve is then empty.
 You may do this also when the bag holds fewer than two tiles.
-If the reserve tile completes an animal, you get a reserve action as usual.
+If the reserve tile completes an animal, the reserve action follows the usual rule.
 
 ## Game end and scoring
 

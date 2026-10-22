@@ -10,10 +10,10 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_10_22_000002) do
+ActiveRecord::Schema[8.1].define(version: 2026_10_22_000003) do
   create_table "games", force: :cascade do |t|
     t.string "public_id", null: false
-    t.integer "rules_version", default: 1, null: false
+    t.integer "rules_version", default: 2, null: false
     t.json "tile_sets", default: ["base"], null: false
     t.string "status", default: "lobby", null: false
     t.integer "first_seat"

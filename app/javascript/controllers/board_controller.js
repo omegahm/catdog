@@ -9,7 +9,10 @@ export default class extends Controller {
   }
 
   connect() {
-    this.onMorph = () => this.render()
+    this.onMorph = () => {
+      this.submitting = false
+      this.render()
+    }
     this.onKey = (event) => this.key(event)
     document.addEventListener("turbo:morph", this.onMorph)
     document.addEventListener("keydown", this.onKey)

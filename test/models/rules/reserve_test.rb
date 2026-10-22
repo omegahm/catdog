@@ -20,8 +20,44 @@ module Rules
       assert_equal [ "cat head n" ], game.state.discard
     end
 
-    test "completing an animal of the opponent's species also gives a reserve action" do
-      assert_equal "awaiting_reserve_action", completed(species: { 1 => "cat", 2 => "dog" }).phase
+    test "completing the opponent's animal gives the opponent the reserve action" do
+      game = completed(species: { 1 => "cat", 2 => "dog" })
+
+      assert_equal [ "awaiting_reserve_action", 2 ], [ game.phase, game.acting_seat ]
+      assert_raises(IllegalMove) { game.apply(move(1, :reserve_action)) }
+
+      taken = game.apply(move(2, :reserve_action, take: "cat head n"))
+      assert_equal({ 1 => nil, 2 => "cat head n" }, taken.state.reserves)
+      assert_equal [ 2, "awaiting_draw" ], [ taken.turn, taken.phase ]
+    end
+
+    test "completing your own animal gives you the reserve action" do
+      assert_equal 1, completed(species: { 1 => "dog", 2 => "cat" }).acting_seat
+    end
+
+    test "completing a cat and a dog at once gives only the placer the reserve action" do
+      game = play(
+        game_with(
+          [ "dog tail n + cat head s", "cat head n" ],
+          board: { [ 2, 3 ] => "dog head s", [ 4, 3 ] => "cat tail n" },
+          species: { 1 => "cat", 2 => "dog" }
+        ),
+        draw(1, "dog tail n + cat head s", "cat head n"),
+        place(1, "dog tail n + cat head s", [ 3, 3 ])
+      )
+
+      assert_equal [ "awaiting_reserve_action", 1 ], [ game.phase, game.acting_seat ]
+    end
+
+    test "rules version 1 gives the placer the reserve action for any species" do
+      game = play(
+        game_with([ "dog tail w", "cat head n", "cat head n#2" ], board: { [ 3, 3 ] => "dog head e" }, species: { 1 => "cat", 2 => "dog" }, rules_version: 1),
+        draw(1, "dog tail w", "cat head n"),
+        place(1, "dog tail w", [ 3, 4 ])
+      )
+
+      assert_equal 1, game.acting_seat
+      assert_equal 1, game.apply(move(1, :reserve_action, take: "cat head n")).state.reserves.key("cat head n")
     end
 
     test "the reserve action takes a tile from the discard pile and the rest goes back to the bag" do

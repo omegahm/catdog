@@ -33,6 +33,24 @@ module GamesHelper
     end
   end
 
+  def turn_alert(engine, me, hot_seat: false)
+    return "" if engine.nil? || engine.ended?
+    return "player-#{engine.acting_seat}" if hot_seat
+
+    engine.acting_seat == me ? "you" : ""
+  end
+
+  def turn_bar_class(engine, me, hot_seat: false)
+    return "turn-bar" if engine.nil? || engine.ended?
+    return [ "turn-bar", "seat", engine.state.species[engine.acting_seat] ] if hot_seat
+
+    [ "turn-bar", ("mine" if engine.acting_seat == me) ]
+  end
+
+  def page_title(engine, me, hot_seat: false)
+    turn_alert(engine, me, hot_seat:) == "you" ? "● Your turn – CatDog" : "CatDog"
+  end
+
   def result_line(engine, me, hot_seat: false)
     winner = engine.winner
     result = winner.nil? ? "The game is a draw." : "#{player_name(winner, me, hot_seat:)} won."

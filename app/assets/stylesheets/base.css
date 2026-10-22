@@ -125,7 +125,23 @@ h1 { margin: 0; font: 700 1.4rem/1.2 var(--display); letter-spacing: -.01em; }
 .settings label { display: flex; gap: 4px; align-items: center; color: var(--muted); }
 .settings select { font: inherit; color: inherit; background: var(--surface); border: 1px solid var(--line); border-radius: 6px; padding: 2px 4px; }
 
-.turn { font: 700 .95rem/1.3 var(--display); margin: 0; }
+.sticky {
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin: -8px 0;
+  padding: max(8px, env(safe-area-inset-top, 0px)) 0 8px;
+  background: var(--bg);
+}
+
+.turn-bar { font: 700 .95rem/1.3 var(--display); margin: 0; padding: 10px 12px; border-radius: 10px; background: var(--surface); border: 1px solid var(--line); }
+.turn-bar.mine { background: var(--legal); border-color: var(--legal); color: var(--bg); }
+.turn-bar.seat { background: var(--ink); border-color: var(--ink); color: var(--bg); }
+.turn-bar.seat.cat { background: var(--cat); border-color: var(--cat); color: #fff; }
+.turn-bar.seat.dog { background: var(--dog); border-color: var(--dog); color: #fff; }
 
 .table { display: flex; flex-direction: column; gap: 10px; }
 
@@ -141,6 +157,9 @@ h1 { margin: 0; font: 700 1.4rem/1.2 var(--display); letter-spacing: -.01em; }
 }
 
 .strip.opp { opacity: .85; }
+.strip.active { box-shadow: inset 0 0 0 2px var(--muted); }
+.strip.mine.active { box-shadow: inset 0 0 0 3px var(--legal); }
+.turn-tag { margin-left: 6px; padding: 1px 8px; border-radius: 999px; background: var(--legal); color: var(--bg); font: 700 .75rem/1.4 var(--body); white-space: nowrap; }
 .strip .who { font: 700 .9rem var(--display); align-self: center; width: 100%; }
 .grp { display: flex; flex-direction: column; gap: 4px; min-width: 0; }
 .pile-group { flex: 1 1 160px; }
@@ -163,7 +182,8 @@ h1 { margin: 0; font: 700 1.4rem/1.2 var(--display); letter-spacing: -.01em; }
 
 .cell { position: relative; border: 0; padding: 0; background: var(--bg); border-radius: 4px; aspect-ratio: 1; min-width: 0; cursor: default; }
 .cell.legal { background: var(--legal-soft); box-shadow: inset 0 0 0 2px var(--legal); cursor: pointer; }
-.cell.last .tile { outline: 3px solid var(--ink); outline-offset: -1px; border-radius: 5px; }
+.cell.last .tile { outline: 3px solid var(--gold); outline-offset: -1px; border-radius: 5px; box-shadow: 0 0 10px 2px var(--gold); }
+.cell.last { z-index: 1; }
 .cell.sel, .cell.hover { box-shadow: inset 0 0 0 3px var(--ink); }
 .cell.hover-bad { box-shadow: inset 0 0 0 3px var(--warn); }
 .cell .tile { position: absolute; inset: 0; width: 100%; height: 100%; }

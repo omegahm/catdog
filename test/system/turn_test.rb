@@ -30,11 +30,15 @@ class TurnTest < ApplicationSystemTestCase
       assert_selector "#board .cell .tile.ghost"
       cell.click
       assert_selector "#status", text: "Opponent's turn."
+      assert_title "CatDog"
+      assert_equal 0, page.evaluate_script("document.getElementById('status').getAnimations().length")
     end
 
     Capybara.using_session(waiter) do
       assert_selector "#board .cell.filled.last"
-      assert_selector "#status", text: "Your turn."
+      assert_selector "#status.mine", text: "Your turn."
+      assert_title "● Your turn – CatDog"
+      assert_equal 1, page.evaluate_script("document.getElementById('status').getAnimations().length")
     end
   end
 

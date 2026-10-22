@@ -95,6 +95,7 @@ class Game < ApplicationRecord
   def play_moves!(seat_position:, seq:, steps:)
     transaction do
       reload
+      seq = state_seq if steps.map { it.first.to_s } == [ "resign" ]
       raise StaleMove, "the page is behind move #{state_seq}" unless seq == state_seq
       raise Rules::IllegalMove, "the game is not being played" unless playing?
 

@@ -15,9 +15,12 @@
           try { return localStorage.getItem(key) || fallback } catch (e) { return fallback }
         };
         root.dataset.style = read("catdog-style", "fur");
+        var colours = <%= raw GamesHelper::COLOURS.to_json %>;
         root.dataset.cat = read("catdog-cat", "orange");
         root.dataset.dog = read("catdog-dog", "blue");
-        if (root.dataset.cat === root.dataset.dog) { root.dataset.cat = "orange"; root.dataset.dog = "blue" }
+        if (colours.indexOf(root.dataset.cat) < 0 || colours.indexOf(root.dataset.dog) < 0 || root.dataset.cat === root.dataset.dog) {
+          root.dataset.cat = "orange"; root.dataset.dog = "blue"
+        }
       })();
     </script>
     <link rel="preconnect" href="https://fonts.googleapis.com">

@@ -106,4 +106,27 @@ class TableTest < ApplicationSystemTestCase
     end
     assert_equal %w[draw], @game.moves.map(&:kind)
   end
+
+  test "a second reserve action on the same page still submits" do
+    seat = @game.first_seat
+    set_state(board: { [ 3, 3 ] => [ "base-35", "front", 0 ] }, drawn: %w[base-40 base-01], phase: "awaiting_place")
+
+    as_mover do
+      turn_to_180("#hand-base-40-back")
+      find("#hand-base-40-back").drag_to(find("#cell-4-3"))
+      find("#discard [data-tile='base-01']").click
+      click_on "Confirm take"
+      assert_selector "#status", text: "Opponent's turn."
+
+      state = Rules::State.from_h(@game.reload.state)
+      @game.update_columns(state: state.with(turn: seat, phase: "awaiting_reserve_action", discard: %w[base-02], bag: state.bag - %w[base-02]).as_json)
+      @game.broadcast_refresh
+      assert_selector "#discard [data-tile='base-02']"
+
+      find("#discard [data-tile='base-02']").click
+      click_on "Confirm swap"
+      assert_selector "#status", text: "Opponent's turn."
+    end
+    assert_equal "base-02", @game.reload.state.dig("reserves", seat.to_s)
+  end
 end

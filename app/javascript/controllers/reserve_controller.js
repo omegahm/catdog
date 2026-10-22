@@ -8,7 +8,10 @@ export default class extends Controller {
   }
 
   connect() {
-    this.onMorph = () => this.render()
+    this.onMorph = () => {
+      this.submitting = false
+      this.render()
+    }
     document.addEventListener("turbo:morph", this.onMorph)
   }
 

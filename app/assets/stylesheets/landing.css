@@ -116,6 +116,7 @@
 
 @media (min-width: 48rem) {
   .hero { grid-template-columns: 1fr 1fr; }
+  .demo { position: relative; top: 20px; }
   .steps { grid-template-columns: repeat(3, 1fr); }
 }
 

@@ -66,7 +66,11 @@
 
 **Species colour**: The colour of cat parts or of dog parts on one player's screen. A player chooses both colours. The two colours are always different.
 
-**Seat**: One of the two player places in a game. A browser holds a seat through a secret token. There are no accounts.
+**Seat**: One of the two player places in a game. A browser holds a seat through a secret token. A seat can also belong to an account.
+
+**Account**: A player identity that lasts across games and devices. It holds the player's settings and statistics. An account is optional.
+
+**Guest**: A player with no account. A guest plays through seat tokens only.
 
 **Invite link**: The URL of a game. A visitor with no seat can use it to take the free seat.
 

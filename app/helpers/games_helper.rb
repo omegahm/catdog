@@ -1,5 +1,5 @@
 module GamesHelper
-  COLOURS = %w[orange blue green purple red teal].freeze
+  COLOURS = %w[orange blue magenta teal olive].freeze
 
   END_REASONS = {
     "bag_exhausted" => "The bag holds fewer than two tiles.",

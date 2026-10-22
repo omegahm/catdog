@@ -76,11 +76,14 @@ Kamal 2 to the shared Hetzner box (arm64), behind Lullabook's kamal-proxy, at `c
 
 - [Research CatNap rules to compare](https://github.com/omegahm/catdog/issues/4): CatDog is based on Cat Nap (Aerobellum, 2025).
 
+## Added after the PoC
+
+- Hot-seat play (one screen), in [#25](https://github.com/omegahm/catdog/pull/25).
+
 ## Out of scope
 
 Each PoC decision must not block these later features:
 
-- Hot-seat play (one screen).
 - Asynchronous play with notifications.
 - Public play, accounts, matchmaking.
 - ELO or other ratings.

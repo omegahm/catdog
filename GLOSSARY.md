@@ -72,6 +72,8 @@
 
 **Guest**: A player with no account. A guest plays through seat tokens only.
 
+**Passkey**: The only way to sign up and sign in to an account. An account has one or more passkeys. An account that loses all its passkeys is lost.
+
 **Invite link**: The URL of a game. A visitor with no seat can use it to take the free seat.
 
 **Seat link**: A private URL that opens a seat on another device.

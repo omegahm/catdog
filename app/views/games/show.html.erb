@@ -1,24 +1,35 @@
-<main class="page">
-  <h1>CatDog</h1>
+<% content_for :head do %>
+  <%= turbo_refreshes_with method: :morph, scroll: :preserve %>
+<% end %>
+
+<main class="page game" data-controller="resync">
+  <%= turbo_stream_from @game %>
+  <header class="game-header">
+    <h1>CatDog</h1>
+    <%= render "settings" %>
+  </header>
   <% if flash[:alert] %><p class="alert"><%= flash[:alert] %></p><% end %>
 
   <% if @game.lobby? %>
     <p id="status">Waiting for your opponent.</p>
     <%= render "copy_field", id: "invite-link", label: "Invite link", value: game_url(@game) %>
-  <% elsif @game.playing? %>
-    <p id="status"><%= @game.turn_seat == @seat.position ? "Your turn." : "Opponent's turn." %></p>
   <% else %>
-    <p id="status">
-      <% if @game.winner_seat.nil? %>The game is a draw.<% elsif @game.winner_seat == @seat.position %>You won.<% else %>Opponent won.<% end %>
-    </p>
-    <div id="rematch">
+    <p id="status" class="turn"><%= status_line(@engine, @seat.position) %></p>
+    <%= render "table", game: @game, engine: @engine, me: @seat.position %>
+  <% end %>
+
+  <% if @game.ended? %>
+    <div id="rematch" class="row">
       <% if @game.rematch_game %>
+        <% if @game.rematch_game.created_at > 30.seconds.ago %>
+          <div data-controller="visit" data-visit-url-value="<%= game_rematch_path(@game) %>"></div>
+        <% end %>
         <%= link_to "Go to the rematch", game_rematch_path(@game), class: "button primary" %>
       <% elsif @game.rematch_offered_by == @seat.position %>
-        <p>You offered a rematch.</p>
+        <span>You offered a rematch.</span>
         <%= button_to "Withdraw", game_rematch_path(@game), method: :delete, class: "button" %>
       <% elsif @game.rematch_offered_by %>
-        <p>Opponent offers a rematch.</p>
+        <span>Opponent offers a rematch.</span>
         <%= button_to "Accept rematch", game_rematch_acceptance_path(@game), class: "button primary" %>
       <% else %>
         <%= button_to "Offer rematch", game_rematch_path(@game), class: "button" %>

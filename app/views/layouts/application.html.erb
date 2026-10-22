@@ -9,6 +9,20 @@
     <%= csrf_meta_tags %>
     <%= csp_meta_tag %>
 
+    <script>
+      (function () {
+        var root = document.documentElement, read = function (key, fallback) {
+          try { return localStorage.getItem(key) || fallback } catch (e) { return fallback }
+        };
+        root.dataset.style = read("catdog-style", "fur");
+        root.dataset.cat = read("catdog-cat", "orange");
+        root.dataset.dog = read("catdog-dog", "blue");
+        if (root.dataset.cat === root.dataset.dog) { root.dataset.cat = "orange"; root.dataset.dog = "blue" }
+      })();
+    </script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700&display=swap">
+
     <%= yield :head %>
 
     <%# Enable PWA manifest for installable apps (make sure to enable in config/routes.rb too!) %>
@@ -24,6 +38,7 @@
   </head>
 
   <body>
+    <%= tile_sprites %>
     <%= yield %>
   </body>
 </html>

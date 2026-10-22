@@ -6,11 +6,10 @@ class GameTest < ActiveSupport::TestCase
   end
 
   def first_placement(game)
-    engine = game.engine
-    tile, faces = engine.legal_placements.first
-    face, rotations = faces.find { |_, cells| cells.values.any?(&:any?) }
-    rotation, cells = rotations.find { |_, cells| cells.any? }
-    { tile:, face:, rotation:, cell: cells.first }
+    options = game.engine.legal_placements.flat_map do |tile, faces|
+      faces.flat_map { |face, rotations| rotations.flat_map { |rotation, cells| cells.map { { tile:, face:, rotation:, cell: it } } } }
+    end
+    options.first
   end
 
   test "starting a game writes the initial state for the first seat" do

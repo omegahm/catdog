@@ -7,6 +7,8 @@ class Game < ApplicationRecord
   has_many :moves, -> { order(:seq) }, dependent: :delete_all
   belongs_to :rematch_game, class_name: "Game", optional: true
 
+  broadcasts_refreshes
+
   enum :status, %w[lobby playing ended].index_by(&:itself), validate: true
 
   validates :first_seat, :turn_seat, inclusion: { in: Rules::SEATS }, allow_nil: true
@@ -75,20 +77,25 @@ class Game < ApplicationRecord
   end
 
   def play!(seat_position:, kind:, seq:, data: {})
+    play_moves!(seat_position:, seq:, steps: [ [ kind, data ] ])
+  end
+
+  def play_moves!(seat_position:, seq:, steps:)
     transaction do
       reload
       raise StaleMove, "the page is behind move #{state_seq}" unless seq == state_seq
       raise Rules::IllegalMove, "the game is not being played" unless playing?
 
-      current = engine
-      data = { tiles: current.draw_tiles } if kind.to_s == "draw"
-      move = Rules::Move.new(seat: seat_position, kind:, data:)
-      after = current.apply(move)
-
-      moves.create!(seq: seq + 1, seat_position:, kind: move.kind, data: move.data)
+      after = steps.each_with_index.reduce(engine) do |current, ((kind, data), index)|
+        data = { tiles: current.draw_tiles } if kind.to_s == "draw"
+        move = Rules::Move.new(seat: seat_position, kind:, data:)
+        current.apply(move).tap do
+          moves.create!(seq: seq + index + 1, seat_position:, kind: move.kind, data: move.data)
+        end
+      end
       update!(
         state: after.state.as_json,
-        state_seq: seq + 1,
+        state_seq: seq + steps.size,
         status: after.ended? ? "ended" : "playing",
         turn_seat: after.turn,
         winner_seat: after.winner
@@ -98,4 +105,6 @@ class Game < ApplicationRecord
   rescue ActiveRecord::RecordNotUnique
     raise StaleMove, "another move took seq #{seq + 1}"
   end
+
+  def last_placed_cell = moves.where(kind: "place").last&.data&.fetch("cell")
 end

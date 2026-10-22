@@ -56,7 +56,7 @@ class LobbyTest < ActionDispatch::IntegrationTest
     guest.follow_redirect!
     host.get game_path(game)
     statuses = [ host, guest ].map { it.css_select("#status").text.strip }
-    assert_equal [ "Opponent's turn.", "Your turn." ], statuses.sort
+    assert_equal [ "Opponent's turn.", "Your turn. Draw from the bag." ], statuses.sort
   end
 
   test "a seat holder who posts join keeps the seat and takes no other" do
@@ -126,7 +126,7 @@ class LobbyTest < ActionDispatch::IntegrationTest
     game.reload.play!(seat_position: 2, kind: "end_game", seq: 0, data: { reason: "resign" })
 
     host.get game_path(game)
-    host.assert_select "#status", "You won."
+    host.assert_select "#status", "You won. Opponent resigned."
     host.post game_rematch_path(game)
     assert_equal 1, game.reload.rematch_offered_by
 

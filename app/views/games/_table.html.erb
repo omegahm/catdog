@@ -1,0 +1,124 @@
+<% state = engine.state %>
+<% tiles = game.tile_set %>
+<% opponent = Rules.opponent(me) %>
+<% my_turn = engine.turn == me && !engine.ended? %>
+<% placements = my_turn ? engine.legal_placements : {} %>
+<% last = game.last_placed_cell %>
+<div class="table" data-controller="board reserve" data-board-legal-value="<%= placements.to_json %>" data-board-seq-value="<%= game.state_seq %>">
+  <section class="strip opp" id="opponent">
+    <span class="who">Opponent · <%= species_label(engine, opponent) %></span>
+    <div class="grp"><span class="label">Reserve</span><%= reserve_slot(tiles, state.reserves[opponent]) %></div>
+    <% if engine.turn == opponent && state.phase == "awaiting_place" %>
+      <div class="grp">
+        <span class="label">Drawn</span>
+        <div class="pile"><% state.drawn.each do |id| %><span class="dtile"><%= tile_pair(tiles, id) %></span><% end %></div>
+      </div>
+    <% end %>
+    <div class="grp"><span class="label">Animals</span><span class="cap" id="opponent-animals"><%= complete_lengths(engine, opponent).join(" · ").presence || "none" %></span></div>
+  </section>
+
+  <div class="board" data-board-target="board" id="board">
+    <% Rules::SIZE.times do |row| %>
+      <% Rules::SIZE.times do |col| %>
+        <% placement = state.board[[ row, col ]] %>
+        <button type="button" id="cell-<%= row %>-<%= col %>" class="cell<%= " filled" if placement %><%= " last" if last == [ row, col ] %>" data-row="<%= row %>" data-col="<%= col %>" data-action="click->board#cell" aria-label="Row <%= row + 1 %>, column <%= col + 1 %>">
+          <%= tile_face(tiles, placement.tile_id, placement.face, rotation: placement.rotation) if placement %>
+        </button>
+      <% end %>
+    <% end %>
+  </div>
+
+  <section class="strip mine" id="me">
+    <span class="who">You · <%= species_label(engine, me) %></span>
+    <div class="grp">
+      <span class="label">Reserve</span>
+      <% if my_turn && state.phase == "awaiting_draw" && engine.can_play_reserve? %>
+        <div class="slot full glow" id="reserve-slot"><%= render "hand", tiles:, tile_id: state.reserves[me], placements: %></div>
+      <% elsif my_turn && state.phase == "awaiting_reserve_action" %>
+        <%= reserve_slot(tiles, state.reserves[me], id: "reserve-slot", class: "glow", data: { reserve_target: "slot", action: "click->reserve#slotTap" }) %>
+      <% else %>
+        <%= reserve_slot(tiles, state.reserves[me], id: "reserve-slot") %>
+      <% end %>
+    </div>
+
+    <div class="grp">
+      <span class="label">Bag</span>
+      <% if my_turn && state.phase == "awaiting_draw" %>
+        <%= form_with url: game_moves_path(game), id: "draw-form", data: { controller: "auto-draw", auto_draw_seq_value: game.state_seq, auto_draw_enabled_value: !engine.can_play_reserve? } do %>
+          <%= hidden_field_tag :kind, "draw", id: nil %>
+          <%= hidden_field_tag :seq, game.state_seq, id: nil %>
+          <button type="submit" class="bagbtn glow<%= " end" if state.bag.size < 2 %>" id="bag">
+            <b><%= state.bag.size %></b><span class="cap"><%= state.bag.size < 2 ? "end game" : "draw 2" %></span>
+          </button>
+        <% end %>
+      <% else %>
+        <div class="bagbtn" id="bag"><b><%= state.bag.size %></b><span class="cap">bag</span></div>
+      <% end %>
+    </div>
+
+    <% if my_turn && state.phase == "awaiting_place" %>
+      <div class="grp">
+        <span class="label">Drawn</span>
+        <div class="tray" id="drawn"><% state.drawn.each do |id| %><%= render "hand", tiles:, tile_id: id, placements: %><% end %></div>
+      </div>
+    <% end %>
+
+    <% if my_turn && state.phase == "awaiting_species" %>
+      <div class="grp">
+        <span class="label">Choose your species</span>
+        <div class="row">
+          <% Rules::SPECIES.each do |species| %>
+            <%= form_with url: game_moves_path(game) do %>
+              <%= hidden_field_tag :kind, "choose_species", id: nil %>
+              <%= hidden_field_tag :seq, game.state_seq, id: nil %>
+              <%= hidden_field_tag :species, species, id: nil %>
+              <button type="submit" class="button">Play as <%= species %></button>
+            <% end %>
+          <% end %>
+        </div>
+      </div>
+    <% end %>
+
+    <% pickable = my_turn && state.phase == "awaiting_reserve_action" %>
+    <div class="grp pile-group">
+      <span class="label">Discard pile<%= " · drag one to your reserve" if pickable %></span>
+      <div class="pile" id="discard">
+        <% state.discard.each do |id| %>
+          <% if pickable %>
+            <span class="dtile pick" tabindex="0" data-tile="<%= id %>" data-reserve-target="tile" data-action="pointerdown->reserve#down keydown->reserve#key"><%= tile_pair(tiles, id) %></span>
+          <% else %>
+            <span class="dtile"><%= tile_pair(tiles, id) %></span>
+          <% end %>
+        <% end %>
+        <% if state.discard.empty? %><span class="cap">empty</span><% end %>
+      </div>
+      <% if pickable %>
+        <div class="row">
+          <%= form_with url: game_moves_path(game), data: { reserve_target: "form" } do %>
+            <%= hidden_field_tag :kind, "reserve_action", id: nil %>
+            <%= hidden_field_tag :seq, game.state_seq, id: nil %>
+            <%= hidden_field_tag :take, "", id: nil, data: { reserve_target: "take" } %>
+            <button type="button" class="button primary" data-reserve-target="confirm" data-action="reserve#confirm" hidden><%= state.reserves[me] ? "Confirm swap" : "Confirm take" %></button>
+          <% end %>
+          <%= form_with url: game_moves_path(game) do %>
+            <%= hidden_field_tag :kind, "reserve_action", id: nil %>
+            <%= hidden_field_tag :seq, game.state_seq, id: nil %>
+            <button type="submit" class="button" id="skip">Skip</button>
+          <% end %>
+        </div>
+      <% end %>
+    </div>
+
+    <div class="grp"><span class="label">Animals</span><span class="cap" id="my-animals"><%= complete_lengths(engine, me).join(" · ").presence || "none" %></span></div>
+  </section>
+
+  <p class="hint" data-board-target="hint"></p>
+
+  <%= form_with url: game_moves_path(game), data: { board_target: "form" }, hidden: true do %>
+    <%= hidden_field_tag :kind, "place", id: nil %>
+    <%= hidden_field_tag :seq, game.state_seq, id: nil %>
+    <% %w[tile face rotation row col].each do |field| %>
+      <%= hidden_field_tag field, "", id: nil, data: { board_target: field } %>
+    <% end %>
+  <% end %>
+</div>

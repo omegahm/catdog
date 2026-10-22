@@ -1,0 +1,27 @@
+<details class="settings" id="settings" data-turbo-permanent data-controller="settings">
+  <summary>Settings</summary>
+  <label>Art style
+    <select data-settings-target="style" data-action="settings#save">
+      <% TileArtHelper::STYLES.each do |value, name| %>
+        <option value="<%= value %>"><%= name %></option>
+      <% end %>
+    </select>
+  </label>
+  <label>Cat colour
+    <select data-settings-target="cat" data-action="settings#save">
+      <% GamesHelper::COLOURS.each do |colour| %>
+        <option value="<%= colour %>"><%= colour.capitalize %></option>
+      <% end %>
+    </select>
+  </label>
+  <label>Dog colour
+    <select data-settings-target="dog" data-action="settings#save">
+      <% GamesHelper::COLOURS.each do |colour| %>
+        <option value="<%= colour %>"><%= colour.capitalize %></option>
+      <% end %>
+    </select>
+  </label>
+  <label class="check">
+    <input type="checkbox" data-settings-target="autoDraw" data-action="settings#save"> Auto-draw
+  </label>
+</details>

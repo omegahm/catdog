@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_10_21_000001) do
+ActiveRecord::Schema[8.1].define(version: 2026_10_22_000001) do
   create_table "games", force: :cascade do |t|
     t.string "public_id", null: false
     t.integer "rules_version", default: 1, null: false
@@ -39,6 +39,14 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_21_000001) do
     t.index ["game_id", "seq"], name: "index_moves_on_game_id_and_seq", unique: true
   end
 
+  create_table "presences", force: :cascade do |t|
+    t.integer "seat_id", null: false
+    t.string "connection_id", null: false
+    t.datetime "last_seen_at", null: false
+    t.index ["connection_id"], name: "index_presences_on_connection_id", unique: true
+    t.index ["seat_id"], name: "index_presences_on_seat_id"
+  end
+
   create_table "seats", force: :cascade do |t|
     t.integer "game_id", null: false
     t.integer "position", null: false
@@ -53,5 +61,6 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_21_000001) do
 
   add_foreign_key "games", "games", column: "rematch_game_id"
   add_foreign_key "moves", "games"
+  add_foreign_key "presences", "seats"
   add_foreign_key "seats", "games"
 end

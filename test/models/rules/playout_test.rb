@@ -10,7 +10,7 @@ module Rules
 
     def random_move(game, random)
       seat = game.turn
-      return move(Rules.opponent(seat), :end_game, reason: "resign") if random.rand < 0.002
+      return move(Rules.opponent(seat), :resign) if random.rand < 0.002
 
       case game.phase
       when "awaiting_draw"

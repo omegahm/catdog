@@ -58,8 +58,8 @@ module Rules
       raise IllegalMove, "unknown seat #{move.seat.inspect}" unless SEATS.include?(move.seat)
 
       next_state =
-        if move.kind == "end_game"
-          end_game(move)
+        if move.kind == "resign"
+          resign(move)
         else
           raise IllegalMove, "it is the turn of seat #{turn}" unless move.seat == turn
 
@@ -81,9 +81,7 @@ module Rules
       raise IllegalMove, "the game is in #{phase}, not #{expected}" unless phase == expected
     end
 
-    def end_game(move)
-      raise IllegalMove, "unknown end reason #{move.data["reason"].inspect}" unless move.data["reason"] == "resign"
-
+    def resign(move)
       state.with(phase: "ended", ending: { "reason" => "resign", "seat" => move.seat })
     end
 

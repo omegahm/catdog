@@ -123,7 +123,7 @@ class LobbyTest < ActionDispatch::IntegrationTest
     host = open_session
     game = create_game(host)
     guest = join(game)
-    game.reload.play!(seat_position: 2, kind: "end_game", seq: 0, data: { reason: "resign" })
+    game.reload.play!(seat_position: 2, kind: "resign", seq: 0)
 
     host.get game_path(game)
     host.assert_select "#status", "You won. Opponent resigned."
@@ -156,7 +156,7 @@ class LobbyTest < ActionDispatch::IntegrationTest
   test "only seat holders can use the rematch link" do
     game = create_game(open_session)
     join(game)
-    game.reload.play!(seat_position: 1, kind: "end_game", seq: 0, data: { reason: "resign" })
+    game.reload.play!(seat_position: 1, kind: "resign", seq: 0)
 
     outsider = open_session
     outsider.post game_rematch_path(game)

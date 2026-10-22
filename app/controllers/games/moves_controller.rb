@@ -18,6 +18,7 @@ class Games::MovesController < ApplicationController
   def steps
     case params.require(:kind)
     when "draw" then [ [ "draw", {} ] ]
+    when "resign" then [ [ "resign", {} ] ]
     when "place" then placement
     when "choose_species" then [ [ "choose_species", { species: params.require(:species) } ] ]
     when "reserve_action" then [ [ "reserve_action", params[:take].present? ? { take: params[:take] } : {} ] ]

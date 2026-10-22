@@ -166,4 +166,28 @@ class GamePageTest < ActionDispatch::IntegrationTest
     @mover.assert_select "svg defs g#line-dog-turn"
     @mover.assert_select "svg defs g#fur-gap"
   end
+
+  test "either player can resign, also on the opponent's turn, and the opponent wins" do
+    @waiter.get game_path(@game)
+    @waiter.assert_select "form button#resign"
+    post_move(@waiter, kind: "resign")
+
+    @game.reload
+    assert @game.ended?
+    assert_equal Rules.opponent(@game.moves.last.seat_position), @game.winner_seat
+    assert_equal "resign", @game.moves.last.kind
+    @waiter.follow_redirect!
+    @waiter.assert_select "#status", "Opponent won. You resigned."
+    @waiter.assert_select "#resign", false
+  end
+
+  test "the opponent indicator shows online or offline from the presence rows" do
+    opponent_seat = @game.seats.find_by(position: @game.first_seat == 1 ? 2 : 1)
+    @mover.get game_path(@game)
+    @mover.assert_select "#presence", "○ offline"
+
+    opponent_seat.presences.create!(connection_id: "x", last_seen_at: Time.current)
+    @mover.get game_path(@game)
+    @mover.assert_select "#presence.online", "● online"
+  end
 end

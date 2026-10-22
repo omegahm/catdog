@@ -2,8 +2,10 @@
   <%= turbo_refreshes_with method: :morph, scroll: :preserve %>
 <% end %>
 
-<main class="page game" data-controller="resync">
+<% opponent_seat = @game.seats.find { it.position == Rules.opponent(@seat.position) } %>
+<main class="page game" data-controller="resync presence" data-action="presence:disconnected->resync#connectionLost presence:connected->resync#connectionBack" data-presence-game-value="<%= @game.public_id %>" data-presence-opponent-value="<%= Rules.opponent(@seat.position) %>" data-presence-seen-ago-value="<%= opponent_seat&.seen_ago || -1 %>">
   <%= turbo_stream_from @game %>
+  <p class="banner" id="reconnecting" data-resync-target="banner" data-turbo-permanent hidden>Reconnecting…</p>
   <header class="game-header">
     <h1>CatDog</h1>
     <%= render "settings" %>
@@ -15,7 +17,11 @@
     <%= render "copy_field", id: "invite-link", label: "Invite link", value: game_url(@game) %>
   <% else %>
     <p id="status" class="turn"><%= status_line(@engine, @seat.position) %></p>
-    <%= render "table", game: @game, engine: @engine, me: @seat.position %>
+    <%= render "table", game: @game, engine: @engine, me: @seat.position, opponent_online: opponent_seat&.online? %>
+  <% end %>
+
+  <% if @game.playing? %>
+    <%= button_to "Resign", game_moves_path(@game), params: { kind: "resign", seq: @game.state_seq }, id: "resign", class: "button danger", form: { data: { turbo_confirm: "Resign this game? Your opponent wins at once." } } %>
   <% end %>
 
   <% if @game.ended? %>

@@ -69,7 +69,7 @@ module Rules
     end
 
     test "replaying the moves gives the same state" do
-      moves = [ draw(1, "dog head e", "cat head n"), place(1, "dog head e", [ 3, 3 ]), move(2, :end_game, reason: "resign") ]
+      moves = [ draw(1, "dog head e", "cat head n"), place(1, "dog head e", [ 3, 3 ]), move(2, :resign) ]
 
       assert_equal play(opening, *moves).state, Game.replay(opening.tile_set, first_seat: 1, moves:).state
     end

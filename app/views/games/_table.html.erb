@@ -6,7 +6,7 @@
 <% last = game.last_placed_cell %>
 <div class="table" data-controller="board reserve" data-board-legal-value="<%= placements.to_json %>" data-board-seq-value="<%= game.state_seq %>">
   <section class="strip opp" id="opponent">
-    <span class="who">Opponent · <%= species_label(engine, opponent) %></span>
+    <span class="who">Opponent <span class="presence<%= " online" if opponent_online %>" id="presence" data-presence-target="indicator"><%= opponent_online ? "● online" : "○ offline" %></span> · <%= species_label(engine, opponent) %></span>
     <div class="grp"><span class="label">Reserve</span><%= reserve_slot(tiles, state.reserves[opponent]) %></div>
     <% if engine.turn == opponent && state.phase == "awaiting_place" %>
       <div class="grp">

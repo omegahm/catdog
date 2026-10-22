@@ -92,6 +92,13 @@ h1 { margin: 0; font: 700 1.4rem/1.2 var(--display); letter-spacing: -.01em; }
 
 .alert { color: var(--warn); margin: 0; }
 
+.button.danger { border-color: var(--warn); color: var(--warn); align-self: flex-start; }
+
+.banner { margin: 0; padding: 8px 12px; border-radius: 8px; background: var(--gold-soft); border: 1px solid var(--gold); font-weight: 600; }
+
+.presence { font: 600 .8rem var(--body); color: var(--muted); }
+.presence.online { color: var(--legal); }
+
 .row { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
 
 .copy-field label { display: block; color: var(--muted); font-size: .875rem; }

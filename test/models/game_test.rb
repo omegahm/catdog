@@ -103,7 +103,7 @@ class GameTest < ActiveSupport::TestCase
 
   test "resigning ends the game and records the winner" do
     game = started
-    game.play!(seat_position: 2, kind: "end_game", seq: 0, data: { reason: "resign" })
+    game.play!(seat_position: 2, kind: "resign", seq: 0)
 
     assert game.ended?
     assert_equal 1, game.winner_seat

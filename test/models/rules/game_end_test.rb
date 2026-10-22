@@ -52,11 +52,11 @@ module Rules
       game = game_with([]).apply(draw(1))
 
       assert_raises(IllegalMove) { game.apply(draw(2)) }
-      assert_raises(IllegalMove) { game.apply(move(2, :end_game, reason: "resign")) }
+      assert_raises(IllegalMove) { game.apply(move(2, :resign)) }
     end
 
     test "a player may resign at any time, also on the opponent's turn, and the opponent wins" do
-      game = game_with([ "cat head n", "cat head n#2" ]).apply(move(2, :end_game, reason: "resign"))
+      game = game_with([ "cat head n", "cat head n#2" ]).apply(move(2, :resign))
 
       assert game.ended?
       assert_equal({ "reason" => "resign", "seat" => 2 }, game.state.ending)
@@ -67,11 +67,7 @@ module Rules
       game = game_with([], board: { [ 3, 3 ] => "dog head e", [ 3, 4 ] => "dog tail w" }, species: { 1 => "dog", 2 => "cat" })
 
       assert_equal 1, game.apply(draw(1)).winner
-      assert_equal 2, game.apply(move(1, :end_game, reason: "resign")).winner
-    end
-
-    test "end_game needs a known reason" do
-      assert_raises(IllegalMove) { game_with([]).apply(move(1, :end_game)) }
+      assert_equal 2, game.apply(move(1, :resign)).winner
     end
 
     test "a game with no complete animals is a draw" do

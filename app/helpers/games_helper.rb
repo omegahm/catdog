@@ -98,6 +98,12 @@ module GamesHelper
     engine.score.lengths.fetch(seat).flat_map { |length, count| [ length ] * count }.sort
   end
 
+  def animal_lengths(engine, seat, **options)
+    lengths = complete_lengths(engine, seat)
+    content = lengths.any? ? safe_join(lengths.map { tag.span(it, class: "length") }) : tag.span("none", class: "cap")
+    tag.span(content, **options, class: [ "lengths", engine.state.species[seat] ])
+  end
+
   def face_fits?(placements, tile_id, face)
     placements.dig(tile_id, face)&.values&.any?(&:any?)
   end

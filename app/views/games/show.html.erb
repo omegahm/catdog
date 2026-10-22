@@ -7,7 +7,7 @@
 <main class="page game" data-controller="resync presence" data-action="presence:disconnected->resync#connectionLost presence:connected->resync#connectionBack" data-presence-game-value="<%= @game.public_id %>" data-presence-opponent-value="<%= Rules.opponent(@seat.position) %>" data-presence-seen-ago-value="<%= opponent_seat&.seen_ago || -1 %>">
   <%= turbo_stream_from @game %>
   <header class="game-header">
-    <h1>CatDog</h1>
+    <h1><%= link_to "CatDog", root_path %></h1>
     <%= render "settings" %>
   </header>
   <% if flash[:alert] %><p class="alert"><%= flash[:alert] %></p><% end %>
@@ -22,21 +22,27 @@
   <% end %>
 
   <% if @game.lobby? %>
-    <%= render "copy_field", id: "invite-link", label: "Invite link", value: game_url(@game) %>
-    <div class="row">
-      <span>Or play both seats on this screen:</span>
-      <%= button_to "Play here instead", game_hot_seat_path(@game), id: "play-here", class: "button" %>
-    </div>
+    <section class="card lobby">
+      <h2>Invite a friend</h2>
+      <p class="lede">Send this link. The game starts when your friend opens it.</p>
+      <%= render "copy_field", id: "invite-link", label: "Invite link", value: game_url(@game) %>
+      <div class="row or">
+        <span>No second device? Play both seats on this screen.</span>
+        <%= button_to "Play here instead", game_hot_seat_path(@game), id: "play-here", class: "button" %>
+      </div>
+    </section>
   <% else %>
     <%= render "table", game: @game, engine: @engine, me: @me, hot_seat: @game.hot_seat?, opponent_online: opponent_seat&.online? %>
   <% end %>
 
-  <% if @game.playing? %>
-    <%= button_to "Resign", game_moves_path(@game), params: { kind: "resign", seq: @game.state_seq }, id: "resign", class: "button danger", form: { data: { turbo_confirm: @game.hot_seat? ? "Resign for Player #{@me}? Player #{Rules.opponent(@me)} wins at once." : "Resign this game? Your opponent wins at once." } } %>
-  <% end %>
+  <footer class="game-footer">
+    <% if @game.playing? %>
+      <%= button_to "Resign", game_moves_path(@game), params: { kind: "resign", seq: @game.state_seq }, id: "resign", class: "button danger", form: { data: { turbo_confirm: @game.hot_seat? ? "Resign for Player #{@me}? Player #{Rules.opponent(@me)} wins at once." : "Resign this game? Your opponent wins at once." } } %>
+    <% end %>
 
-  <details class="seat-link">
-    <summary>Open on another device</summary>
-    <%= render "copy_field", id: "seat-link", label: "Seat link (keep it private)", value: game_seat_link_url(@game, token: seat_token_for(@game)) %>
-  </details>
+    <details class="seat-link">
+      <summary>Open on another device</summary>
+      <%= render "copy_field", id: "seat-link", label: "Seat link (keep it private)", value: game_seat_link_url(@game, token: seat_token_for(@game)) %>
+    </details>
+  </footer>
 </main>

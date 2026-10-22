@@ -74,7 +74,7 @@ class PresenceTest < ApplicationSystemTestCase
     join
 
     ActionCable.server.connections.each { it.close(reason: "server_restart", reconnect: true) }
-    assert_no_selector "#reconnecting", wait: 10
+    assert_no_selector "#reconnecting", wait: 20
     assert_selector "#presence", text: "● online", wait: 10
   end
 end

@@ -74,6 +74,8 @@
 
 **Guest**: A player with no account. A guest plays through seat tokens only.
 
+**Statistics**: Totals about an account's finished online games: games played, wins, losses, draws, points per scored game, best game, longest animal and species played. Each game is a win, a loss or a draw; a resign is counted inside the win or the loss. Points per scored game leave out resigned games. The longest animal is the longest complete animal of the account's own species. Hot-seat games are not counted.
+
 **Settings**: Art style, cat colour, dog colour and auto-draw. A guest's settings live in one browser. An account's settings live on the account and follow it to every device. At sign-in, the account's settings replace the browser's; a new account takes the browser's settings.
 
 **Passkey**: The only way to sign up and sign in to an account. An account has one or more passkeys. An account that loses all its passkeys is lost.

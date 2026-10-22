@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_10_22_000001) do
+ActiveRecord::Schema[8.1].define(version: 2026_10_22_000002) do
   create_table "games", force: :cascade do |t|
     t.string "public_id", null: false
     t.integer "rules_version", default: 1, null: false
@@ -25,6 +25,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_22_000001) do
     t.integer "rematch_game_id"
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
+    t.boolean "hot_seat", default: false, null: false
     t.index ["public_id"], name: "index_games_on_public_id", unique: true
     t.index ["rematch_game_id"], name: "index_games_on_rematch_game_id"
   end

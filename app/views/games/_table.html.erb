@@ -6,7 +6,11 @@
 <% last = game.last_placed_cell %>
 <div class="table" data-controller="board reserve" data-board-legal-value="<%= placements.to_json %>" data-board-seq-value="<%= game.state_seq %>">
   <section class="strip opp" id="opponent">
-    <span class="who">Opponent <span class="presence<%= " online" if opponent_online %>" id="presence" data-presence-target="indicator"><%= opponent_online ? "● online" : "○ offline" %></span> · <%= species_label(engine, opponent) %></span>
+    <span class="who">
+      <%= player_name(opponent, me, hot_seat:) %>
+      <% unless hot_seat %><span class="presence<%= " online" if opponent_online %>" id="presence" data-presence-target="indicator"><%= opponent_online ? "● online" : "○ offline" %></span><% end %>
+      · <%= species_label(engine, opponent) %>
+    </span>
     <div class="grp"><span class="label">Reserve</span><%= reserve_slot(tiles, state.reserves[opponent]) %></div>
     <% if engine.turn == opponent && state.phase == "awaiting_place" %>
       <div class="grp">
@@ -29,7 +33,7 @@
   </div>
 
   <section class="strip mine" id="me">
-    <span class="who">You · <%= species_label(engine, me) %></span>
+    <span class="who" id="me-name"><%= player_name(me, me, hot_seat:) %> · <%= species_label(engine, me) %></span>
     <div class="grp">
       <span class="label">Reserve</span>
       <% if my_turn && state.phase == "awaiting_draw" && engine.can_play_reserve? %>

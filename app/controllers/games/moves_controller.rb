@@ -5,7 +5,7 @@ class Games::MovesController < ApplicationController
   before_action :require_seat
 
   def create
-    @game.play_moves!(seat_position: @seat.position, seq: Integer(params.require(:seq)), steps:)
+    @game.play_moves!(seat_position: @game.acting_position(@seat), seq: Integer(params.require(:seq)), steps:)
     redirect_to @game, status: :see_other
   rescue Game::StaleMove
     redirect_to @game, status: :see_other

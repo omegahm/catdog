@@ -1,14 +1,60 @@
 class Game < ApplicationRecord
   class StaleMove < StandardError; end
+  class NotAllowed < StandardError; end
 
+  has_secure_token :public_id
   has_many :seats, -> { order(:position) }, dependent: :destroy
   has_many :moves, -> { order(:seq) }, dependent: :delete_all
+  belongs_to :rematch_game, class_name: "Game", optional: true
 
   enum :status, %w[lobby playing ended].index_by(&:itself), validate: true
 
   validates :first_seat, :turn_seat, inclusion: { in: Rules::SEATS }, allow_nil: true
 
+  def self.create_with_seat!(token)
+    transaction { create!.tap { it.seats.create!(position: 1, token:) } }
+  end
+
+  def to_param = public_id
+
   def tile_set = Rules::TileSet.cached(*tile_sets)
+
+  def join!(token)
+    transaction do
+      reload
+      raise NotAllowed, "the game is full" unless lobby? && seats.size < 2
+
+      seats.create!(position: 2, token:)
+      start!
+    end
+  rescue ActiveRecord::RecordNotUnique
+    raise NotAllowed, "the game is full"
+  end
+
+  def offer_rematch!(position)
+    raise NotAllowed, "a rematch is already offered" unless ended? && rematch_offered_by.nil? && rematch_game.nil?
+
+    update!(rematch_offered_by: position)
+  end
+
+  def withdraw_rematch!(position)
+    raise NotAllowed, "you have not offered a rematch" unless rematch_offered_by == position && rematch_game.nil?
+
+    update!(rematch_offered_by: nil)
+  end
+
+  def accept_rematch!(position)
+    transaction do
+      reload
+      raise NotAllowed, "there is no rematch offer to accept" unless rematch_offered_by == Rules.opponent(position) && rematch_game.nil?
+
+      Game.create!(tile_sets:).tap do |rematch|
+        seats.each { rematch.seats.create!(position: it.position, token_digest: it.token_digest) }
+        rematch.start!
+        update!(rematch_game: rematch)
+      end
+    end
+  end
 
   def start!(first_seat: Rules::SEATS.sample(random: SecureRandom))
     raise Rules::IllegalMove, "the game has already started" unless lobby?

@@ -1,0 +1,77 @@
+:root {
+  --bg: #f6f3ec;
+  --ink: #1d2124;
+  --muted: #5d666b;
+  --line: #d5d0c4;
+  --accent: #1b9460;
+  --warn: #b03e2b;
+  color-scheme: light;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg: #14191b;
+    --ink: #e8ecee;
+    --muted: #9aa5aa;
+    --line: #2f383c;
+    --accent: #3fcf8a;
+    --warn: #ea7660;
+    color-scheme: dark;
+  }
+}
+
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--ink);
+  font: 16px/1.5 ui-sans-serif, system-ui, sans-serif;
+}
+
+.page {
+  max-width: 40rem;
+  margin: 0 auto;
+  padding: 24px 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+h1 { margin: 0; }
+
+.button {
+  font: inherit;
+  color: inherit;
+  background: none;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  padding: 8px 16px;
+  cursor: pointer;
+  text-decoration: none;
+  display: inline-block;
+}
+
+.button.primary {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: var(--bg);
+  font-weight: 600;
+}
+
+.alert { color: var(--warn); }
+
+.copy-field label { display: block; color: var(--muted); font-size: .875rem; }
+
+.copy-row { display: flex; gap: 8px; }
+
+.copy-row input {
+  flex: 1;
+  min-width: 0;
+  font: inherit;
+  color: inherit;
+  background: none;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  padding: 8px;
+}
+
+.seat-link summary { cursor: pointer; color: var(--muted); }

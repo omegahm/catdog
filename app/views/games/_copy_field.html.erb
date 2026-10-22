@@ -1,0 +1,7 @@
+<div class="copy-field" data-controller="clipboard">
+  <label for="<%= id %>"><%= label %></label>
+  <div class="copy-row">
+    <input id="<%= id %>" type="text" value="<%= value %>" readonly data-clipboard-target="source">
+    <button type="button" class="button" data-action="clipboard#copy" data-clipboard-target="button">Copy</button>
+  </div>
+</div>

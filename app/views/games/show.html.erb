@@ -1,0 +1,33 @@
+<main class="page">
+  <h1>CatDog</h1>
+  <% if flash[:alert] %><p class="alert"><%= flash[:alert] %></p><% end %>
+
+  <% if @game.lobby? %>
+    <p id="status">Waiting for your opponent.</p>
+    <%= render "copy_field", id: "invite-link", label: "Invite link", value: game_url(@game) %>
+  <% elsif @game.playing? %>
+    <p id="status"><%= @game.turn_seat == @seat.position ? "Your turn." : "Opponent's turn." %></p>
+  <% else %>
+    <p id="status">
+      <% if @game.winner_seat.nil? %>The game is a draw.<% elsif @game.winner_seat == @seat.position %>You won.<% else %>Opponent won.<% end %>
+    </p>
+    <div id="rematch">
+      <% if @game.rematch_game %>
+        <%= link_to "Go to the rematch", game_rematch_path(@game), class: "button primary" %>
+      <% elsif @game.rematch_offered_by == @seat.position %>
+        <p>You offered a rematch.</p>
+        <%= button_to "Withdraw", game_rematch_path(@game), method: :delete, class: "button" %>
+      <% elsif @game.rematch_offered_by %>
+        <p>Opponent offers a rematch.</p>
+        <%= button_to "Accept rematch", game_rematch_acceptance_path(@game), class: "button primary" %>
+      <% else %>
+        <%= button_to "Offer rematch", game_rematch_path(@game), class: "button" %>
+      <% end %>
+    </div>
+  <% end %>
+
+  <details class="seat-link">
+    <summary>Open on another device</summary>
+    <%= render "copy_field", id: "seat-link", label: "Seat link (keep it private)", value: game_seat_link_url(@game, token: seat_token_for(@game)) %>
+  </details>
+</main>

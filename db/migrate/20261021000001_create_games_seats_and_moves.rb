@@ -1,6 +1,7 @@
 class CreateGamesSeatsAndMoves < ActiveRecord::Migration[8.1]
   def change
     create_table :games do |t|
+      t.string :public_id, null: false, index: { unique: true }
       t.integer :rules_version, null: false, default: 1
       t.json :tile_sets, null: false, default: [ "base" ]
       t.string :status, null: false, default: "lobby"
@@ -9,6 +10,8 @@ class CreateGamesSeatsAndMoves < ActiveRecord::Migration[8.1]
       t.integer :winner_seat
       t.integer :state_seq, null: false, default: 0
       t.json :state
+      t.integer :rematch_offered_by
+      t.references :rematch_game, foreign_key: { to_table: :games }
       t.timestamps
     end
 
@@ -20,7 +23,7 @@ class CreateGamesSeatsAndMoves < ActiveRecord::Migration[8.1]
       t.timestamps
     end
     add_index :seats, [ :game_id, :position ], unique: true
-    add_index :seats, :token_digest, unique: true
+    add_index :seats, [ :game_id, :token_digest ], unique: true
 
     create_table :moves do |t|
       t.references :game, null: false, foreign_key: true, index: false

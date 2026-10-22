@@ -2,7 +2,7 @@ class Seat < ApplicationRecord
   belongs_to :game
 
   validates :position, inclusion: { in: Rules::SEATS }, uniqueness: { scope: :game_id }
-  validates :token_digest, presence: true, uniqueness: true
+  validates :token_digest, presence: true, uniqueness: { scope: :game_id }
 
   def self.digest(token) = Digest::SHA256.hexdigest(token)
 

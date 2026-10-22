@@ -12,6 +12,7 @@
 
 ActiveRecord::Schema[8.1].define(version: 2026_10_21_000001) do
   create_table "games", force: :cascade do |t|
+    t.string "public_id", null: false
     t.integer "rules_version", default: 1, null: false
     t.json "tile_sets", default: ["base"], null: false
     t.string "status", default: "lobby", null: false
@@ -20,8 +21,12 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_21_000001) do
     t.integer "winner_seat"
     t.integer "state_seq", default: 0, null: false
     t.json "state"
+    t.integer "rematch_offered_by"
+    t.integer "rematch_game_id"
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
+    t.index ["public_id"], name: "index_games_on_public_id", unique: true
+    t.index ["rematch_game_id"], name: "index_games_on_rematch_game_id"
   end
 
   create_table "moves", force: :cascade do |t|
@@ -42,10 +47,11 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_21_000001) do
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
     t.index ["game_id", "position"], name: "index_seats_on_game_id_and_position", unique: true
+    t.index ["game_id", "token_digest"], name: "index_seats_on_game_id_and_token_digest", unique: true
     t.index ["game_id"], name: "index_seats_on_game_id"
-    t.index ["token_digest"], name: "index_seats_on_token_digest", unique: true
   end
 
+  add_foreign_key "games", "games", column: "rematch_game_id"
   add_foreign_key "moves", "games"
   add_foreign_key "seats", "games"
 end

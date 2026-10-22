@@ -1,5 +1,57 @@
-<main class="page">
-  <h1>CatDog</h1>
-  <p>A game for two players on two devices.</p>
-  <%= button_to "New game", games_path, class: "button primary" %>
+<% cells = demo_cells %>
+<% tiles = Rules::TileSet.cached %>
+<% content_for :head, demo_keyframes(cells) %>
+<main class="landing">
+  <section class="hero">
+    <div class="hero-text">
+      <h1>CatDog</h1>
+      <p class="pitch">Lay tiles. Grow cats and dogs. Own the most lengths.</p>
+      <div class="cta">
+        <%= button_to "New game", games_path, class: "button primary big" %>
+        <p class="note">Two players, two devices. Send the link to a friend.</p>
+      </div>
+    </div>
+
+    <figure class="demo">
+      <div class="demo-board" id="demo-board" style="--cols: <%= HomeHelper::DEMO_COLS.count %>; --cycle: <%= HomeHelper::DEMO_CYCLE %>s">
+        <% HomeHelper::DEMO_ROWS.each do |row| %>
+          <% HomeHelper::DEMO_COLS.each do |col| %>
+            <% cell = cells[[ row, col ]] %>
+            <% if cell %>
+              <div class="demo-cell<%= " complete" if cell.completed_step %>" style="--tile-anim: demo-tile-<%= cell.step %>; --glow-anim: demo-glow-<%= cell.step %>">
+                <%= tile_face(tiles, cell.placement.tile_id, cell.placement.face, rotation: cell.placement.rotation) %>
+              </div>
+            <% else %>
+              <div class="demo-cell empty"></div>
+            <% end %>
+          <% end %>
+        <% end %>
+      </div>
+      <figcaption>A complete dog of length 4 and a complete cat of length 3. Two cats are still open.</figcaption>
+    </figure>
+  </section>
+
+  <section class="how">
+    <h2>How to play</h2>
+    <ol class="steps">
+      <li>
+        <h3>Draw two, place one</h3>
+        <p>Each turn, draw two tiles. Place one so that every edge matches. The other tile is discarded.</p>
+      </li>
+      <li>
+        <h3>Complete animals</h3>
+        <p>An animal is complete with one head and one tail. The first complete animal decides who plays cat and who plays dog.</p>
+      </li>
+      <li>
+        <h3>Win lengths</h3>
+        <p>For each length, the player with more complete animals of that length scores a point. Most points win.</p>
+      </li>
+    </ol>
+    <p><%= link_to "Read the full rules", HomeHelper::RULES_URL, class: "more" %></p>
+  </section>
+
+  <footer class="footer">
+    <%= link_to "Source on GitHub", HomeHelper::SOURCE_URL %>
+    <span>MIT License</span>
+  </footer>
 </main>

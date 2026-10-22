@@ -1,0 +1,45 @@
+<% left = hot_seat ? 1 : me %>
+<% right = Rules.opponent(left) %>
+<section class="result" id="result">
+  <p id="result-reason"><%= ending_line(engine, me, hot_seat:) %></p>
+  <% unless resigned?(engine) %>
+    <% rows = score_rows(engine, left) %>
+    <% if rows.empty? %>
+      <p>No complete animals.</p>
+    <% else %>
+      <table class="score" id="score">
+        <thead>
+          <tr><th></th><th><%= player_name(left, me, hot_seat:) %></th><th><%= player_name(right, me, hot_seat:) %></th><th>Point</th></tr>
+        </thead>
+        <tbody>
+          <% rows.each do |length, left_count, right_count, scorer| %>
+            <tr><th>Length <%= length %></th><td><%= left_count %></td><td><%= right_count %></td><td><%= scorer ? "● #{player_name(scorer, me, hot_seat:)}" : "–" %></td></tr>
+          <% end %>
+        </tbody>
+        <tfoot>
+          <tr><th>Points</th><td><%= engine.score.points[left] %></td><td><%= engine.score.points[right] %></td><td></td></tr>
+        </tfoot>
+      </table>
+      <% tiebreak = tiebreak_line(engine, me, hot_seat:) %>
+      <% if tiebreak %><p id="tiebreak"><%= tiebreak %></p><% end %>
+    <% end %>
+  <% end %>
+  <div id="rematch" class="row">
+    <% if game.rematch_game %>
+      <% if game.rematch_game.created_at > 30.seconds.ago %>
+        <div data-controller="visit" data-visit-url-value="<%= game_rematch_path(game) %>"></div>
+      <% end %>
+      <%= link_to "Go to the rematch", game_rematch_path(game), class: "button primary" %>
+    <% elsif game.hot_seat? %>
+      <%= button_to "Rematch", game_rematch_path(game), class: "button primary" %>
+    <% elsif game.rematch_offered_by == seat.position %>
+      <span>You offered a rematch.</span>
+      <%= button_to "Withdraw", game_rematch_path(game), method: :delete, class: "button" %>
+    <% elsif game.rematch_offered_by %>
+      <span>Opponent offers a rematch.</span>
+      <%= button_to "Accept rematch", game_rematch_acceptance_path(game), class: "button primary" %>
+    <% else %>
+      <%= button_to "Offer rematch", game_rematch_path(game), class: "button" %>
+    <% end %>
+  </div>
+</section>

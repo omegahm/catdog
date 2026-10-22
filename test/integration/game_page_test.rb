@@ -30,6 +30,8 @@ class GamePageTest < ActionDispatch::IntegrationTest
     browser.post game_moves_path(@game), params: { seq: @game.reload.state_seq, **params }
   end
 
+  def texts(browser, selector) = browser.css_select(selector).map { it.text.strip }
+
   def legal_value(browser)
     JSON.parse(browser.css_select("[data-controller~='board']").sole["data-board-legal-value"])
   end
@@ -191,11 +193,50 @@ class GamePageTest < ActionDispatch::IntegrationTest
     assert_equal Rules.opponent(@game.moves.last.seat_position), @game.winner_seat
     assert_equal "resign", @game.moves.last.kind
     @waiter.follow_redirect!
-    @waiter.assert_select "#status", "Opponent won. You resigned."
+    @waiter.assert_select "#status", "Opponent won."
     @waiter.assert_select "#status.mine", false
+    @waiter.assert_select "#status.won", false
+    @waiter.assert_select "#result-reason", "You resigned."
+    @waiter.assert_select "#score", false
     @waiter.assert_select ".strip.active", false
     @waiter.assert_select "title", "CatDog"
     @waiter.assert_select "#resign", false
+  end
+
+  test "the result panel shows the reason and the points for each length" do
+    seat = @game.first_seat
+    set_state(
+      board: { [ 3, 3 ] => [ "base-35", "front", 0 ], [ 4, 3 ] => [ "base-40", "back", 180 ] },
+      species: { seat => "dog", Rules.opponent(seat) => "cat" },
+      phase: "ended", ending: { "reason" => "bag_exhausted" }
+    )
+    @game.update_columns(status: "ended")
+    @mover.get game_path(@game)
+    @waiter.get game_path(@game)
+
+    @mover.assert_select "#status.turn-bar.won[data-turn-cue-ended-value=true]", "You won."
+    @mover.assert_select "#result-reason", "The bag holds fewer than two tiles."
+    assert_equal [ "", "You", "Opponent", "Point" ], texts(@mover, "#score thead th")
+    @mover.assert_select "#score tbody tr", 1
+    @mover.assert_select "#score tbody tr th", "Length 2"
+    assert_equal [ "1", "0", "● You" ], texts(@mover, "#score tbody tr td")
+    assert_equal [ "1", "0", "" ], texts(@mover, "#score tfoot td")
+    @mover.assert_select "#tiebreak", false
+    @mover.assert_select "#result #rematch"
+    @waiter.assert_select "#status.won", false
+    @waiter.assert_select "#status", "Opponent won."
+    assert_equal [ "0", "1", "● Opponent" ], texts(@waiter, "#score tbody tr td")
+  end
+
+  test "an ended game with no complete animals shows a draw" do
+    set_state(phase: "ended", ending: { "reason" => "stuck" })
+    @game.update_columns(status: "ended")
+    @mover.get game_path(@game)
+
+    @mover.assert_select "#status", "The game is a draw."
+    @mover.assert_select "#result-reason", "Neither drawn tile has a legal placement."
+    @mover.assert_select "#result", /No complete animals/
+    @mover.assert_select "#score", false
   end
 
   test "the opponent indicator shows online or offline from the presence rows" do

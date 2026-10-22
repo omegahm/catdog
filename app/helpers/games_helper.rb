@@ -41,7 +41,8 @@ module GamesHelper
   end
 
   def turn_bar_class(engine, me, hot_seat: false)
-    return "turn-bar" if engine.nil? || engine.ended?
+    return "turn-bar" if engine.nil?
+    return [ "turn-bar", ("won" if engine.winner && (hot_seat || engine.winner == me)) ] if engine.ended?
     return [ "turn-bar", "seat", engine.state.species[engine.acting_seat] ] if hot_seat
 
     [ "turn-bar", ("mine" if engine.acting_seat == me) ]
@@ -53,14 +54,39 @@ module GamesHelper
 
   def result_line(engine, me, hot_seat: false)
     winner = engine.winner
-    result = winner.nil? ? "The game is a draw." : "#{player_name(winner, me, hot_seat:)} won."
+    winner.nil? ? "The game is a draw." : "#{player_name(winner, me, hot_seat:)} won."
+  end
+
+  def ending_line(engine, me, hot_seat: false)
     ending = engine.state.ending
-    reason = if ending.fetch("reason") == "resign"
-      "#{player_name(ending.fetch("seat"), me, hot_seat:)} resigned."
-    else
-      END_REASONS.fetch(ending.fetch("reason"))
+    return END_REASONS.fetch(ending.fetch("reason")) unless resigned?(engine)
+
+    "#{player_name(ending.fetch("seat"), me, hot_seat:)} resigned."
+  end
+
+  def resigned?(engine) = engine.state.ending.fetch("reason") == "resign"
+
+  def score_rows(engine, left)
+    score = engine.score
+    right = Rules.opponent(left)
+    score.all_lengths.map do |length|
+      counts = [ score.count(left, length), score.count(right, length) ]
+      scorer = if counts.first > counts.last then left elsif counts.last > counts.first then right end
+      [ length, *counts, scorer ]
     end
-    "#{result} #{reason}"
+  end
+
+  def tiebreak_line(engine, me, hot_seat: false)
+    score = engine.score
+    return unless score.tied?
+    return "Tied on points and on every length." unless score.tiebreak_length
+
+    name = player_name(engine.winner, me, hot_seat:)
+    "Tied on points. #{name} #{name == "You" ? "have" : "has"} more animals of length #{score.tiebreak_length}."
+  end
+
+  def rematch_offered_to?(game, seat)
+    game.ended? && !game.hot_seat? && game.rematch_game.nil? && game.rematch_offered_by.present? && game.rematch_offered_by != seat.position
   end
 
   def species_label(engine, seat)

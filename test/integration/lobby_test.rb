@@ -126,7 +126,8 @@ class LobbyTest < ActionDispatch::IntegrationTest
     game.reload.play!(seat_position: 2, kind: "resign", seq: 0)
 
     host.get game_path(game)
-    host.assert_select "#status", "You won. Opponent resigned."
+    host.assert_select "#status", "You won."
+    host.assert_select "#result-reason", "Opponent resigned."
     host.post game_rematch_path(game)
     assert_equal 1, game.reload.rematch_offered_by
 
@@ -135,7 +136,10 @@ class LobbyTest < ActionDispatch::IntegrationTest
 
     host.post game_rematch_path(game)
     guest.get game_path(game)
-    guest.assert_select "#rematch", /Opponent offers a rematch/
+    guest.assert_select "#result #rematch", /Opponent offers a rematch/
+    guest.assert_select "#status #offer-cue", "Opponent offers a rematch ↑"
+    host.get game_path(game)
+    host.assert_select "#offer-cue", false
 
     host.post game_rematch_acceptance_path(game)
     assert_nil game.reload.rematch_game

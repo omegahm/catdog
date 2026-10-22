@@ -31,10 +31,11 @@ class PresenceTest < ApplicationSystemTestCase
     join
 
     accept_confirm { click_on "Resign" }
-    assert_selector "#status", text: "Opponent won. You resigned."
+    assert_selector "#status", text: "Opponent won."
+    assert_selector "#result-reason", text: "You resigned."
     assert_no_selector "#resign"
     Capybara.using_session(:guest) do
-      assert_selector "#status", text: "You won. Opponent resigned."
+      assert_selector "#status.won", text: "You won."
     end
   end
 

@@ -55,7 +55,9 @@ class HotSeatTest < ActionDispatch::IntegrationTest
     follow_redirect!
 
     assert_equal first, @game.moves.last.seat_position
-    assert_select "#status", "Player #{Rules.opponent(first)} won. Player #{first} resigned."
+    assert_select "#status.won", "Player #{Rules.opponent(first)} won."
+    assert_select "#result-reason", "Player #{first} resigned."
+    assert_select "#score", false
   end
 
   test "rematch starts the next hot-seat game in one click" do

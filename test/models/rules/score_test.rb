@@ -27,6 +27,13 @@ module Rules
       assert_equal 1, score([ 2, 3, 3, 7 ], [ 2, 2, 3, 7 ]).winner
     end
 
+    test "the tiebreak length is the longest length where the counts differ, and only when points are tied" do
+      assert_equal 5, score([ 2, 2, 5 ], [ 2, 5, 5 ]).tiebreak_length
+      assert_nil score([ 2, 4 ], [ 4, 2 ]).tiebreak_length
+      assert_nil score([ 3, 3, 5 ], [ 3, 4 ]).tiebreak_length
+      assert_equal [ 5, 4, 3 ], score([ 3, 3, 5 ], [ 3, 4 ]).all_lengths
+    end
+
     test "the game is a draw when no length is different" do
       result = score([ 2, 4 ], [ 4, 2 ])
 

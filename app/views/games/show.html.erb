@@ -14,8 +14,12 @@
 
   <div class="sticky">
     <p class="banner" id="reconnecting" data-resync-target="banner" data-turbo-permanent hidden>Reconnecting…</p>
-    <p id="status" class="<%= class_names(turn_bar_class(@engine, @me, hot_seat: @game.hot_seat?)) %>" data-controller="turn-cue" data-turn-cue-alert-value="<%= turn_alert(@engine, @me, hot_seat: @game.hot_seat?) %>"><%= @engine ? status_line(@engine, @me, hot_seat: @game.hot_seat?) : "Waiting for your opponent." %></p>
+    <p id="status" class="<%= class_names(turn_bar_class(@engine, @me, hot_seat: @game.hot_seat?)) %>" data-controller="turn-cue" data-turn-cue-alert-value="<%= turn_alert(@engine, @me, hot_seat: @game.hot_seat?) %>" data-turn-cue-ended-value="<%= @game.ended? %>"><%= @engine ? status_line(@engine, @me, hot_seat: @game.hot_seat?) : "Waiting for your opponent." %><% if rematch_offered_to?(@game, @seat) %> <a class="offer" id="offer-cue" href="#result">Opponent offers a rematch ↑</a><% end %></p>
   </div>
+
+  <% if @game.ended? %>
+    <%= render "result", game: @game, engine: @engine, me: @me, seat: @seat, hot_seat: @game.hot_seat? %>
+  <% end %>
 
   <% if @game.lobby? %>
     <%= render "copy_field", id: "invite-link", label: "Invite link", value: game_url(@game) %>
@@ -29,27 +33,6 @@
 
   <% if @game.playing? %>
     <%= button_to "Resign", game_moves_path(@game), params: { kind: "resign", seq: @game.state_seq }, id: "resign", class: "button danger", form: { data: { turbo_confirm: @game.hot_seat? ? "Resign for Player #{@me}? Player #{Rules.opponent(@me)} wins at once." : "Resign this game? Your opponent wins at once." } } %>
-  <% end %>
-
-  <% if @game.ended? %>
-    <div id="rematch" class="row">
-      <% if @game.rematch_game %>
-        <% if @game.rematch_game.created_at > 30.seconds.ago %>
-          <div data-controller="visit" data-visit-url-value="<%= game_rematch_path(@game) %>"></div>
-        <% end %>
-        <%= link_to "Go to the rematch", game_rematch_path(@game), class: "button primary" %>
-      <% elsif @game.hot_seat? %>
-        <%= button_to "Rematch", game_rematch_path(@game), class: "button primary" %>
-      <% elsif @game.rematch_offered_by == @seat.position %>
-        <span>You offered a rematch.</span>
-        <%= button_to "Withdraw", game_rematch_path(@game), method: :delete, class: "button" %>
-      <% elsif @game.rematch_offered_by %>
-        <span>Opponent offers a rematch.</span>
-        <%= button_to "Accept rematch", game_rematch_acceptance_path(@game), class: "button primary" %>
-      <% else %>
-        <%= button_to "Offer rematch", game_rematch_path(@game), class: "button" %>
-      <% end %>
-    </div>
   <% end %>
 
   <details class="seat-link">

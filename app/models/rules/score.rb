@@ -18,16 +18,19 @@ module Rules
     end
 
     def winner
-      return points.max_by(&:last).first if points.values.uniq.size > 1
+      return points.max_by(&:last).first unless tied?
 
-      deciding = all_lengths.sort.reverse.find { count(1, it) != count(2, it) }
-      deciding && SEATS.max_by { count(it, deciding) }
+      tiebreak_length && SEATS.max_by { count(it, tiebreak_length) }
+    end
+
+    def tied? = points.values.uniq.size == 1
+
+    def tiebreak_length
+      all_lengths.find { count(1, it) != count(2, it) } if tied?
     end
 
     def draw? = winner.nil?
 
-    private
-
-    def all_lengths = lengths.values.flat_map(&:keys).uniq
+    def all_lengths = lengths.values.flat_map(&:keys).uniq.sort.reverse
   end
 end

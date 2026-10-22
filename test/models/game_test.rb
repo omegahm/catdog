@@ -110,6 +110,16 @@ class GameTest < ActiveSupport::TestCase
     assert_raises(Rules::IllegalMove) { game.play!(seat_position: 1, kind: "draw", seq: 1) }
   end
 
+  test "resigning from a page that is behind still ends the game" do
+    game = started
+    game.play!(seat_position: 1, kind: "draw", seq: 0)
+    game.play!(seat_position: 2, kind: "resign", seq: 0)
+
+    assert game.reload.ended?
+    assert_equal 1, game.winner_seat
+    assert_equal [ 1, 2 ], game.moves.pluck(:seq)
+  end
+
   test "a full random game through the database replays to the cached state" do
     random = Random.new(7)
     game = started

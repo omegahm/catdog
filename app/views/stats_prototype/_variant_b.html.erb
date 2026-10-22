@@ -1,0 +1,52 @@
+<% s = @stats %>
+<main class="page">
+  <%= render "header" %>
+  <section class="proto-profile">
+    <span class="proto-label">Player</span>
+    <h2 class="proto-name"><%= @name %></h2>
+    <% if s[:played].zero? %>
+      <p class="proto-lede">No finished games yet. Play an online game and it shows here.</p>
+    <% else %>
+      <p class="proto-lede">
+        <%= s[:played] %> games since <%= @games.last.played_on.strftime("%B %Y") %>.
+        Won <strong><%= s[:wins] %></strong>, lost <strong><%= s[:losses] %></strong>, <strong><%= s[:draws] %></strong> draws.
+        <%= s[:resigned_me] %> resigned, <%= s[:resigned_them] %> opponents resigned.
+        <strong><%= s[:avg_points] %></strong> points per game.
+      </p>
+    <% end %>
+  </section>
+  <% if s[:played].positive? %>
+    <section class="proto-species">
+      <% %w[cat dog].each do |sp| %>
+        <div class="proto-species-col <%= sp %>">
+          <span class="proto-big"><%= s[sp.to_sym] %></span>
+          <span>games as <%= sp %></span>
+          <span class="proto-sub">won <%= s[:"#{sp}_wins"] %></span>
+        </div>
+      <% end %>
+    </section>
+    <dl class="proto-records">
+      <dt>Longest animal</dt>
+      <dd>A <%= s[:longest].species %> of length <strong><%= s[:longest].longest %></strong>, vs <%= s[:longest].opponent %>, <%= link_to s[:longest].played_on.strftime("%-d %b %Y"), "#" %></dd>
+      <dt>Best game</dt>
+      <dd><strong><%= s[:best].mine %></strong> points to <%= s[:best].theirs %>, vs <%= s[:best].opponent %>, <%= link_to s[:best].played_on.strftime("%-d %b %Y"), "#" %></dd>
+    </dl>
+    <h3 class="proto-h2">History</h3>
+    <% @games.first(20).group_by { it.played_on.beginning_of_month }.each do |month, games| %>
+      <h4 class="proto-month"><%= month.strftime("%B %Y") %></h4>
+      <ul class="proto-timeline">
+        <% games.each do |g| %>
+          <li>
+            <span class="proto-day"><%= g.played_on.day %></span>
+            <%= render "result_word", g: %>
+            <%= g.mine ? "#{g.mine}–#{g.theirs}" : "" %>
+            vs <%= g.opponent %>
+            <% if g.species %>as <span class="proto-dot <%= g.species %>"></span><%= g.species %><% end %>
+            <%= link_to "open", "#", class: "proto-open" %>
+          </li>
+        <% end %>
+      </ul>
+    <% end %>
+    <%= link_to "Older games", "#", class: "button" %>
+  <% end %>
+</main>

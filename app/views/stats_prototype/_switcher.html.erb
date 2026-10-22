@@ -1,0 +1,20 @@
+<% keys = @variants.keys %>
+<% i = keys.index(@variant) %>
+<% link = ->(k) { "?" + request.query_parameters.merge("variant" => k).except("page", "result").to_query } %>
+<nav class="proto-switcher" id="proto-switcher" data-prev="<%= link.(keys[(i - 1) % keys.size]) %>" data-next="<%= link.(keys[(i + 1) % keys.size]) %>">
+  <a href="<%= link.(keys[(i - 1) % keys.size]) %>" data-turbo-action="replace">←</a>
+  <span><%= @variant %> (<%= @variants[@variant] %>)</span>
+  <a href="<%= link.(keys[(i + 1) % keys.size]) %>" data-turbo-action="replace">→</a>
+</nav>
+<script>
+  (function () {
+    if (window.protoKeys) return;
+    window.protoKeys = true;
+    document.addEventListener("keydown", function (e) {
+      var bar = document.getElementById("proto-switcher");
+      if (!bar || e.target.closest("input, textarea, [contenteditable]")) return;
+      if (e.key === "ArrowLeft") Turbo.visit(bar.dataset.prev, { action: "replace" });
+      if (e.key === "ArrowRight") Turbo.visit(bar.dataset.next, { action: "replace" });
+    });
+  })();
+</script>

@@ -1,0 +1,4 @@
+<% content_for :title, "PROTOTYPE · Statistics" %>
+<div class="proto-flag">PROTOTYPE — <%= @variant %> (<%= @variants[@variant] %>) · fake data · <%= link_to(params[:empty] ? "with games" : "new account (0 games)", request.query_parameters.merge(empty: params[:empty] ? nil : 1).compact.then { "?#{it.to_query}" }) %></div>
+<%= render "variant_#{@variant.downcase}" %>
+<%= render "switcher" %>

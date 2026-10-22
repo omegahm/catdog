@@ -1,0 +1,38 @@
+<% s = @stats %>
+<main class="page">
+  <%= render "header" %>
+  <h2 class="proto-h2">Your games</h2>
+  <nav class="proto-tabs">
+    <% { nil => "All", "win" => "Won", "loss" => "Lost", "draw" => "Draw" }.each do |key, label| %>
+      <%= link_to label, "?" + { variant: "C", result: key, empty: params[:empty] }.compact.to_query, class: ("on" if params[:result].presence == key) %>
+    <% end %>
+  </nav>
+  <% if s[:played].zero? %>
+    <p class="proto-empty">No games here.</p>
+  <% else %>
+    <p class="proto-strip">
+      <strong><%= s[:played] %></strong> games ·
+      <strong><%= s[:wins] %></strong>W <strong><%= s[:draws] %></strong>D <strong><%= s[:losses] %></strong>L ·
+      <%= s[:resigned_me] %> resigned / <%= s[:resigned_them] %> by resign ·
+      <strong><%= s[:avg_points] || "—" %></strong> pts/game ·
+      longest <strong><%= s[:longest]&.longest || "—" %></strong> ·
+      <span class="proto-dot cat"></span><%= s[:cat] %> <span class="proto-dot dog"></span><%= s[:dog] %>
+    </p>
+    <table class="proto-table dense">
+      <thead><tr><th>Date</th><th>Opponent</th><th>Result</th><th>Points</th><th>As</th><th>Longest</th><th></th></tr></thead>
+      <tbody>
+        <% @games.each do |g| %>
+          <tr class="<%= g.result %>">
+            <td><%= g.played_on.strftime("%-d %b") %></td>
+            <td><%= g.opponent %></td>
+            <td><%= render "result_word", g: %></td>
+            <td><%= g.mine ? "#{g.mine}–#{g.theirs}" : "—" %></td>
+            <td><% if g.species %><span class="proto-dot <%= g.species %>"></span><% else %>—<% end %></td>
+            <td><%= g.longest || "—" %><%= " ★" if g == s[:longest] %></td>
+            <td><%= link_to "Open", "#" %></td>
+          </tr>
+        <% end %>
+      </tbody>
+    </table>
+  <% end %>
+</main>

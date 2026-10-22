@@ -1,0 +1,59 @@
+<% s = @stats %>
+<main class="page">
+  <%= render "header" %>
+  <h2 class="proto-h2">Your statistics</h2>
+  <% if s[:played].zero? %>
+    <p class="proto-empty">No finished games yet. Statistics start after your first online game. Hot-seat games do not count.</p>
+    <%= button_to "New game", games_path, class: "button primary" %>
+  <% else %>
+    <section class="proto-tiles">
+      <div class="proto-tile wide">
+        <span class="proto-label">Games played</span>
+        <span class="proto-big"><%= s[:played] %></span>
+        <div class="proto-bar">
+          <span class="win" style="flex: <%= s[:wins] %>"></span><span class="draw" style="flex: <%= s[:draws] %>"></span><span class="loss" style="flex: <%= s[:losses] %>"></span>
+        </div>
+        <span class="proto-sub">Won <%= s[:wins] %> (<%= s[:resigned_them] %> by resign) · Draw <%= s[:draws] %> · Lost <%= s[:losses] %> (<%= s[:resigned_me] %> resigned)</span>
+      </div>
+      <div class="proto-tile">
+        <span class="proto-label">Points per game</span>
+        <span class="proto-big"><%= s[:avg_points] %></span>
+        <span class="proto-sub">Best: <%= link_to "#{s[:best].mine}–#{s[:best].theirs} vs #{s[:best].opponent}", "#" %></span>
+      </div>
+      <div class="proto-tile">
+        <span class="proto-label">Longest animal</span>
+        <span class="proto-big"><%= s[:longest].longest %></span>
+        <span class="proto-sub"><span class="proto-dot <%= s[:longest].species %>"></span><%= s[:longest].species %> · <%= link_to s[:longest].played_on.strftime("%-d %b"), "#" %></span>
+      </div>
+      <div class="proto-tile wide">
+        <span class="proto-label">Species played</span>
+        <div class="proto-bar species">
+          <span class="cat" style="flex: <%= s[:cat] %>">Cat <%= s[:cat] %></span><span class="dog" style="flex: <%= s[:dog] %>">Dog <%= s[:dog] %></span>
+        </div>
+        <span class="proto-sub">Won <%= s[:cat_wins] %> as cat · won <%= s[:dog_wins] %> as dog</span>
+      </div>
+    </section>
+
+    <h2 class="proto-h2">Past games</h2>
+    <% rows = @games.each_slice(20).to_a %>
+    <table class="proto-table">
+      <thead><tr><th>Date</th><th>Opponent</th><th>Result</th><th>Points</th><th>As</th></tr></thead>
+      <tbody>
+        <% rows.fetch(@page - 1, []).each do |g| %>
+          <tr>
+            <td><%= link_to g.played_on.strftime("%-d %b"), "#" %></td>
+            <td><%= g.opponent %></td>
+            <td><%= render "result_word", g: %></td>
+            <td><%= g.mine ? "#{g.mine}–#{g.theirs}" : "—" %></td>
+            <td><% if g.species %><span class="proto-dot <%= g.species %>"></span><%= g.species %><% else %>—<% end %></td>
+          </tr>
+        <% end %>
+      </tbody>
+    </table>
+    <nav class="row proto-pages">
+      <% rows.size.times do |p| %>
+        <%= link_to p + 1, "?variant=A&page=#{p + 1}", class: "button#{" primary" if p + 1 == @page}" %>
+      <% end %>
+    </nav>
+  <% end %>
+</main>

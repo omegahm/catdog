@@ -1,0 +1,2 @@
+<% word = { win: "Won", loss: "Lost", draw: "Draw" }[g.result] %>
+<span class="proto-result <%= g.result %>"><%= word %><%= " · resigned" if g.ending == "resign_me" %><%= " · they resigned" if g.ending == "resign_them" %></span>

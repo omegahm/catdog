@@ -12,5 +12,7 @@ Rails.application.routes.draw do
     end
   end
 
+  get "prototype/stats" => "stats_prototype#show" if Rails.env.development?
+
   get "up" => "rails/health#show", as: :rails_health_check
 end

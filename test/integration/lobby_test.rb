@@ -18,6 +18,10 @@ class LobbyTest < ActionDispatch::IntegrationTest
     get root_path
 
     assert_select "form[action=?] button", games_path, text: "New game"
+    assert_select ".pitch", "Lay tiles. Grow cats and dogs. Own the most lengths."
+    assert_select "#demo-board .demo-cell .tile", HomeHelper::DEMO_PLACEMENTS.size
+    assert_select ".steps li", 3
+    assert_select "a[href=?]", HomeHelper::RULES_URL, text: "Read the full rules"
   end
 
   test "creating a game takes seat 1 and shows the invite link" do

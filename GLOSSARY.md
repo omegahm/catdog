@@ -56,7 +56,7 @@
 
 **Reserve slot**: The place on screen that shows a player's reserve tile, or that the reserve is empty. Both players see both slots.
 
-**Auto-draw**: A setting in one browser. When it is on and the player has no playable reserve tile, the browser draws for them as soon as their turn starts. It is on by default.
+**Auto-draw**: A setting. When it is on and the player has no playable reserve tile, the browser draws for them as soon as their turn starts. It is on by default.
 
 **Length point**: The 1 point a player scores for a length when they have more complete animals of that length than the opponent.
 
@@ -73,6 +73,8 @@
 **Account**: A player identity that lasts across games and devices. It holds the player's settings and statistics. An account is optional.
 
 **Guest**: A player with no account. A guest plays through seat tokens only.
+
+**Settings**: Art style, cat colour, dog colour and auto-draw. A guest's settings live in one browser. An account's settings live on the account and follow it to every device. At sign-in, the account's settings replace the browser's; a new account takes the browser's settings.
 
 **Passkey**: The only way to sign up and sign in to an account. An account has one or more passkeys. An account that loses all its passkeys is lost.
 

@@ -41,8 +41,8 @@ module HomeHelper
     fade = percent.(DEMO_FADE)
     frames = cells.values.map do |cell|
       appear = DEMO_START + cell.step * DEMO_STEP
-      css = "@keyframes demo-tile-#{cell.step} { 0%, #{percent.(appear)}% { opacity: 0; transform: translateY(-18%) scale(1.12); } " \
-        "#{percent.(appear + 0.45)}%, #{hold}% { opacity: 1; transform: none; } #{fade}%, 100% { opacity: 0; transform: none; } }"
+      css = "@keyframes demo-tile-#{cell.step} { 0%, #{percent.(appear)}% { opacity: 0; translate: 0 -18%; scale: 1.12; } " \
+        "#{percent.(appear + 0.45)}%, #{hold}% { opacity: 1; translate: none; scale: none; } #{fade}%, 100% { opacity: 0; translate: none; scale: none; } }"
       next css unless cell.completed_step
 
       glow = DEMO_START + cell.completed_step * DEMO_STEP + 0.45

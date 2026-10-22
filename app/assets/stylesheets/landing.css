@@ -50,7 +50,7 @@
 .demo-cell { position: relative; aspect-ratio: 1; border-radius: 5px; background: var(--bg); }
 .demo-cell .tile { position: absolute; inset: 0; width: 100%; height: 100%; }
 
-.demo-cell:not(.empty) { animation: var(--tile-anim) var(--cycle) cubic-bezier(.2, .8, .3, 1.2) infinite both; }
+.demo-cell .tile { animation: var(--tile-anim) var(--cycle) cubic-bezier(.2, .8, .3, 1.2) infinite both; }
 
 .demo-cell.complete::after {
   content: "";
@@ -120,5 +120,5 @@
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .demo-cell:not(.empty), .demo-cell.complete::after { animation: none; }
+  .demo-cell .tile, .demo-cell.complete::after { animation: none; }
 }

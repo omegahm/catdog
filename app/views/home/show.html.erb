@@ -17,13 +17,9 @@
         <% HomeHelper::DEMO_ROWS.each do |row| %>
           <% HomeHelper::DEMO_COLS.each do |col| %>
             <% cell = cells[[ row, col ]] %>
-            <% if cell %>
-              <div class="demo-cell<%= " complete" if cell.completed_step %>" style="--tile-anim: demo-tile-<%= cell.step %>; --glow-anim: demo-glow-<%= cell.step %>">
-                <%= tile_face(tiles, cell.placement.tile_id, cell.placement.face, rotation: cell.placement.rotation) %>
-              </div>
-            <% else %>
-              <div class="demo-cell empty"></div>
-            <% end %>
+            <div class="demo-cell<%= " complete" if cell&.completed_step %>"<% if cell %> style="--tile-anim: demo-tile-<%= cell.step %>; --glow-anim: demo-glow-<%= cell.step %>"<% end %>>
+              <%= tile_face(tiles, cell.placement.tile_id, cell.placement.face, rotation: cell.placement.rotation) if cell %>
+            </div>
           <% end %>
         <% end %>
       </div>

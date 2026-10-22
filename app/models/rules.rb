@@ -1,4 +1,5 @@
 module Rules
+  RULES_VERSION = 2
   SIZE = 7
   SEATS = [ 1, 2 ].freeze
   SPECIES = %w[cat dog].freeze

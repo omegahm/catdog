@@ -13,7 +13,7 @@ class GamesController < ApplicationController
   def show
     @seat = seat_for(@game)
     @engine = @game.engine if @seat && !@game.lobby?
-    @me = @engine && @game.hot_seat? ? @engine.turn : @seat&.position
+    @me = @engine && @game.hot_seat? ? @engine.acting_seat : @seat&.position
     return if @seat
     return render(:join) if @game.lobby?
 

@@ -18,7 +18,7 @@ class PlaytestReportTest < ActiveSupport::TestCase
         when "awaiting_species" then [ "choose_species", { species: Rules::SPECIES.sample(random:) } ]
         when "awaiting_reserve_action" then [ "reserve_action", { take: (engine.state.discard + [ nil ]).sample(random:) } ]
         end
-      game.play!(seat_position: engine.turn, kind:, seq: game.state_seq, data:)
+      game.play!(seat_position: engine.acting_seat, kind:, seq: game.state_seq, data:)
     end
     game
   end

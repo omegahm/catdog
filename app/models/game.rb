@@ -73,7 +73,7 @@ class Game < ApplicationRecord
   def start!(first_seat: Rules::SEATS.sample(random: SecureRandom))
     raise Rules::IllegalMove, "the game has already started" unless lobby?
 
-    engine = Rules::Game.start(tile_set, first_seat:)
+    engine = Rules::Game.start(tile_set, first_seat:, rules_version:)
     update!(status: "playing", first_seat:, turn_seat: first_seat, state: engine.state.as_json, state_seq: 0)
   end
 
@@ -81,11 +81,11 @@ class Game < ApplicationRecord
     last_seq = moves.maximum(:seq) || 0
     return replay if state.nil? || state_seq != last_seq
 
-    Rules::Game.new(tile_set, Rules::State.from_h(state))
+    Rules::Game.new(tile_set, Rules::State.from_h(state), rules_version:)
   end
 
   def replay
-    Rules::Game.replay(tile_set, first_seat:, moves: moves.map(&:to_rule))
+    Rules::Game.replay(tile_set, first_seat:, moves: moves.map(&:to_rule), rules_version:)
   end
 
   def play!(seat_position:, kind:, seq:, data: {})
@@ -109,7 +109,7 @@ class Game < ApplicationRecord
         state: after.state.as_json,
         state_seq: seq + steps.size,
         status: after.ended? ? "ended" : "playing",
-        turn_seat: after.turn,
+        turn_seat: after.acting_seat,
         winner_seat: after.winner
       )
       after

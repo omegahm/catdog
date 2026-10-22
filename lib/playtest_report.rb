@@ -47,7 +47,7 @@ class PlaytestReport
   private
 
   def stats_for(game)
-    engine = Rules::Game.start(game.tile_set, first_seat: game.first_seat)
+    engine = Rules::Game.start(game.tile_set, first_seat: game.first_seat, rules_version: game.rules_version)
     counts = Hash.new(0)
     game.moves.each do |move|
       before = engine

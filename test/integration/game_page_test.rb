@@ -190,4 +190,44 @@ class GamePageTest < ActionDispatch::IntegrationTest
     @mover.get game_path(@game)
     @mover.assert_select "#presence.online", "● online"
   end
+
+  test "completing the opponent's animal gives the opponent the reserve action" do
+    first = @game.first_seat
+    second = Rules.opponent(first)
+    set_state(
+      board: { [ 3, 3 ] => [ "base-35", "front", 0 ] },
+      drawn: %w[base-40 base-01],
+      phase: "awaiting_place",
+      species: { first => "cat", second => "dog" }
+    )
+    post_move(@mover, kind: "place", tile: "base-40", face: "back", rotation: 180, row: 4, col: 3)
+
+    @mover.follow_redirect!
+    @mover.assert_select "#status", "Opponent takes a tile into their reserve, or skips."
+    @mover.assert_select "#discard .dtile.pick", false
+    @waiter.get game_path(@game)
+    @waiter.assert_select "#status", "Opponent completed one of your animals. Take a tile from the discard pile into your reserve, or skip."
+    @waiter.assert_select "#discard .dtile.pick[data-tile=?]", "base-01"
+
+    post_move(@waiter, kind: "reserve_action", take: "base-01")
+    @game.reload
+    assert_equal "base-01", @game.state.dig("reserves", second.to_s)
+    assert_equal second, @game.turn_seat
+    assert_equal "awaiting_draw", @game.state["phase"]
+  end
+
+  test "games from before the rule change keep rules version 1" do
+    @game.update_columns(rules_version: 1)
+    first = @game.first_seat
+    set_state(
+      board: { [ 3, 3 ] => [ "base-35", "front", 0 ] },
+      drawn: %w[base-40 base-01],
+      phase: "awaiting_place",
+      species: { first => "cat", Rules.opponent(first) => "dog" }
+    )
+    post_move(@mover, kind: "place", tile: "base-40", face: "back", rotation: 180, row: 4, col: 3)
+    @mover.follow_redirect!
+
+    @mover.assert_select "#status", /You completed an animal/
+  end
 end

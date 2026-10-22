@@ -14,7 +14,8 @@ module GamesHelper
 
   def status_line(engine, me, hot_seat: false)
     return result_line(engine, me, hot_seat:) if engine.ended?
-    return "Opponent's turn." unless engine.turn == me
+    return "Opponent takes a tile into their reserve, or skips." if engine.acting_seat != me && engine.phase == "awaiting_reserve_action"
+    return "Opponent's turn." unless engine.acting_seat == me
 
     who = player_name(me, me, hot_seat:)
     case engine.phase
@@ -23,7 +24,12 @@ module GamesHelper
       engine.can_play_reserve? ? "#{turn}. Draw from the bag, or place your reserve tile." : "#{turn}. Draw from the bag."
     when "awaiting_place" then hot_seat ? "#{who}: place one of your tiles." : "Place one of your tiles."
     when "awaiting_species" then "#{who} completed a cat and a dog. Choose your species."
-    when "awaiting_reserve_action" then "#{who} completed an animal. Take a tile from the discard pile into your reserve, or skip."
+    when "awaiting_reserve_action"
+      done = if engine.turn == me then "#{who} completed an animal."
+      elsif hot_seat then "Player #{engine.turn} completed an animal of #{who}."
+      else "Opponent completed one of your animals."
+      end
+      "#{done} Take a tile from the discard pile into your reserve, or skip."
     end
   end
 

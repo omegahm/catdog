@@ -2,17 +2,20 @@ require "securerandom"
 
 module Rules
   class Game
-    attr_reader :tile_set, :state
+    attr_reader :tile_set, :state, :rules_version
 
-    def self.start(tile_set, first_seat:) = new(tile_set, State.initial(tile_set, first_seat))
-
-    def self.replay(tile_set, first_seat:, moves:)
-      moves.reduce(start(tile_set, first_seat:)) { |game, move| game.apply(move) }
+    def self.start(tile_set, first_seat:, rules_version: RULES_VERSION)
+      new(tile_set, State.initial(tile_set, first_seat), rules_version:)
     end
 
-    def initialize(tile_set, state)
+    def self.replay(tile_set, first_seat:, moves:, rules_version: RULES_VERSION)
+      moves.reduce(start(tile_set, first_seat:, rules_version:)) { |game, move| game.apply(move) }
+    end
+
+    def initialize(tile_set, state, rules_version: RULES_VERSION)
       @tile_set = tile_set
       @state = state
+      @rules_version = rules_version
     end
 
     def board = @board ||= Board.new(tile_set, state.board)
@@ -20,6 +23,8 @@ module Rules
     def phase = state.phase
 
     def turn = state.turn
+
+    def acting_seat = phase == "awaiting_reserve_action" ? state.reserve_seat || turn : turn
 
     def ended? = phase == "ended"
 
@@ -61,7 +66,7 @@ module Rules
         if move.kind == "resign"
           resign(move)
         else
-          raise IllegalMove, "it is the turn of seat #{turn}" unless move.seat == turn
+          raise IllegalMove, "it is the turn of seat #{acting_seat}" unless move.seat == acting_seat
 
           case move.kind
           when "draw" then draw(move.data)
@@ -72,7 +77,7 @@ module Rules
           else raise IllegalMove, "unknown move #{move.kind.inspect}"
           end
         end
-      Game.new(tile_set, next_state)
+      Game.new(tile_set, next_state, rules_version:)
     end
 
     private
@@ -128,10 +133,19 @@ module Rules
 
     def after_completion(next_state, completed)
       return end_turn(next_state) if completed.empty?
-      return offer_reserve_action(next_state) if next_state.species[turn]
-      return next_state.with(phase: "awaiting_species") if completed.size > 1
 
-      offer_reserve_action(assign_species(next_state, completed.first))
+      if next_state.species[turn].nil?
+        return next_state.with(phase: "awaiting_species") if completed.size > 1
+
+        next_state = assign_species(next_state, completed.first)
+      end
+      offer_reserve_action(next_state, reserve_seat_for(next_state, completed))
+    end
+
+    def reserve_seat_for(next_state, completed)
+      return turn if rules_version < 2 || completed.size > 1
+
+      next_state.species.key(completed.first)
     end
 
     def choose_species(data)
@@ -139,19 +153,20 @@ module Rules
       species = data["species"]
       raise IllegalMove, "unknown species #{species.inspect}" unless SPECIES.include?(species)
 
-      offer_reserve_action(assign_species(state, species))
+      offer_reserve_action(assign_species(state, species), turn)
     end
 
     def reserve_action(data)
       expect_phase "awaiting_reserve_action"
       take = data["take"]
+      seat = acting_seat
       discard = state.discard
       reserves = state.reserves
       if take
         raise IllegalMove, "#{take.inspect} is not in the discard pile" unless discard.include?(take)
 
-        discard = discard - [ take ] + [ reserves[turn] ].compact
-        reserves = reserves.merge(turn => take)
+        discard = discard - [ take ] + [ reserves[seat] ].compact
+        reserves = reserves.merge(seat => take)
       end
       end_turn(state.with(bag: (state.bag + discard).sort, discard: [], reserves:))
     end
@@ -160,12 +175,12 @@ module Rules
       next_state.with(species: { turn => species, Rules.opponent(turn) => Rules.other_species(species) })
     end
 
-    def offer_reserve_action(next_state)
+    def offer_reserve_action(next_state, seat)
       return end_turn(next_state) if next_state.discard.empty?
 
-      next_state.with(phase: "awaiting_reserve_action")
+      next_state.with(phase: "awaiting_reserve_action", reserve_seat: seat)
     end
 
-    def end_turn(next_state) = next_state.with(phase: "awaiting_draw", turn: Rules.opponent(turn))
+    def end_turn(next_state) = next_state.with(phase: "awaiting_draw", turn: Rules.opponent(turn), reserve_seat: nil)
   end
 end

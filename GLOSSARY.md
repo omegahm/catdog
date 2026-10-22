@@ -48,7 +48,7 @@
 
 **Reserve**: A place next to a player that holds 0 or 1 tile. A player may play their reserve tile instead of drawing.
 
-**Reserve action**: What a player gets once per placement that completes one or more animals: take or swap one tile from the discard pile into their reserve, or skip.
+**Reserve action**: What one player gets once per placement that completes one or more animals: take or swap one tile from the discard pile into their reserve, or skip. The owner of the completed animals gets it. If a cat and a dog complete at the same time, the player who placed the tile gets it.
 
 **Reserve slot**: The place on screen that shows a player's reserve tile, or that the reserve is empty. Both players see both slots.
 

@@ -1,7 +1,7 @@
 <% state = engine.state %>
 <% tiles = game.tile_set %>
 <% opponent = Rules.opponent(me) %>
-<% my_turn = engine.turn == me && !engine.ended? %>
+<% my_turn = engine.acting_seat == me && !engine.ended? %>
 <% placements = my_turn ? engine.legal_placements : {} %>
 <% last = game.last_placed_cell %>
 <div class="table" data-controller="board reserve" data-board-legal-value="<%= placements.to_json %>" data-board-seq-value="<%= game.state_seq %>">

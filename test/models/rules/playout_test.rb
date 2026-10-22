@@ -9,7 +9,7 @@ module Rules
     SEED = Integer(ENV.fetch("PLAYOUT_SEED", Random.new_seed))
 
     def random_move(game, random)
-      seat = game.turn
+      seat = game.acting_seat
       return move(Rules.opponent(seat), :resign) if random.rand < 0.002
 
       case game.phase

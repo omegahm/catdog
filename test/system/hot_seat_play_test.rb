@@ -16,9 +16,11 @@ class HotSeatPlayTest < ApplicationSystemTestCase
     first("#drawn .hand:not(.nofit)").click
     cell = first("#board .cell.legal")
     cell.click
+    page.execute_script("document.getElementById('status').getAnimations().forEach(it => it.cancel())")
     cell.click
 
     assert_selector "#status", text: "Player #{second}'s turn."
+    assert_equal 1, page.evaluate_script("document.getElementById('status').getAnimations().length")
     assert_selector "#me-name", text: "Player #{second}"
     assert_selector "#board .cell.filled", count: 1
     find("#bag").click

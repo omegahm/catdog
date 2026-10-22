@@ -29,6 +29,9 @@ class HotSeatTest < ActionDispatch::IntegrationTest
     assert_select "#me-name", /Player #{first}/
     assert_select "#opponent .who", /Player #{Rules.opponent(first)}/
     assert_select "#presence", false
+    assert_select "#status.turn-bar.seat[data-turn-cue-alert-value=?]", "player-#{first}"
+    assert_select ".turn-tag", false
+    assert_select "title", "CatDog"
   end
 
   test "after a turn the other player is at the bottom and can move" do
@@ -40,6 +43,7 @@ class HotSeatTest < ActionDispatch::IntegrationTest
     second = Rules.opponent(first)
     assert_select "#status", "Player #{second}'s turn. Draw from the bag."
     assert_select "#me-name", /Player #{second}/
+    assert_select "#status[data-turn-cue-alert-value=?]", "player-#{second}"
     post game_moves_path(@game), params: { seq: @game.reload.state_seq, kind: "draw" }
     assert_equal second, @game.moves.last.seat_position
   end

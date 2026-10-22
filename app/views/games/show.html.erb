@@ -1,3 +1,4 @@
+<% content_for :title, page_title(@engine, @me, hot_seat: @game.hot_seat?) %>
 <% content_for :head do %>
   <%= turbo_refreshes_with method: :morph, scroll: :preserve %>
 <% end %>
@@ -5,22 +6,24 @@
 <% opponent_seat = @game.seats.find { it.position == Rules.opponent(@seat.position) } %>
 <main class="page game" data-controller="resync presence" data-action="presence:disconnected->resync#connectionLost presence:connected->resync#connectionBack" data-presence-game-value="<%= @game.public_id %>" data-presence-opponent-value="<%= Rules.opponent(@seat.position) %>" data-presence-seen-ago-value="<%= opponent_seat&.seen_ago || -1 %>">
   <%= turbo_stream_from @game %>
-  <p class="banner" id="reconnecting" data-resync-target="banner" data-turbo-permanent hidden>Reconnecting…</p>
   <header class="game-header">
     <h1>CatDog</h1>
     <%= render "settings" %>
   </header>
   <% if flash[:alert] %><p class="alert"><%= flash[:alert] %></p><% end %>
 
+  <div class="sticky">
+    <p class="banner" id="reconnecting" data-resync-target="banner" data-turbo-permanent hidden>Reconnecting…</p>
+    <p id="status" class="<%= class_names(turn_bar_class(@engine, @me, hot_seat: @game.hot_seat?)) %>" data-controller="turn-cue" data-turn-cue-alert-value="<%= turn_alert(@engine, @me, hot_seat: @game.hot_seat?) %>"><%= @engine ? status_line(@engine, @me, hot_seat: @game.hot_seat?) : "Waiting for your opponent." %></p>
+  </div>
+
   <% if @game.lobby? %>
-    <p id="status">Waiting for your opponent.</p>
     <%= render "copy_field", id: "invite-link", label: "Invite link", value: game_url(@game) %>
     <div class="row">
       <span>Or play both seats on this screen:</span>
       <%= button_to "Play here instead", game_hot_seat_path(@game), id: "play-here", class: "button" %>
     </div>
   <% else %>
-    <p id="status" class="turn"><%= status_line(@engine, @me, hot_seat: @game.hot_seat?) %></p>
     <%= render "table", game: @game, engine: @engine, me: @me, hot_seat: @game.hot_seat?, opponent_online: opponent_seat&.online? %>
   <% end %>
 

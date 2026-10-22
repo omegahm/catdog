@@ -42,6 +42,8 @@
 
 **Turn**: One player's go: draw two tiles or play the reserve tile, place one tile, then choose a species and do a reserve action if the placement allows it.
 
+**Turn bar**: The bar at the top of the game page that stays on screen when the player scrolls. It tells whose turn it is and what to do. It is green on the player's own turn. In hot-seat play it has the species colour of the player on turn.
+
 **Legal placement**: A cell, face and rotation where a tile can be placed under the connection rules.
 
 **Discard pile**: The open stack of tiles that players drew but did not place. It goes back to the bag after each reserve action.

@@ -46,6 +46,20 @@ class GamePageTest < ActionDispatch::IntegrationTest
     @mover.assert_select "turbo-cable-stream-source", 1
   end
 
+  test "the turn bar, the active strip and the page title show whose turn it is" do
+    @mover.get game_path(@game)
+    @waiter.get game_path(@game)
+
+    @mover.assert_select ".sticky #status.turn-bar.mine[data-turn-cue-alert-value=you]"
+    @mover.assert_select "#me.strip.active .turn-tag", "▶ Your turn"
+    @mover.assert_select "#opponent.strip.active", false
+    @mover.assert_select "title", "● Your turn – CatDog"
+    @waiter.assert_select "#status.turn-bar:not(.mine)[data-turn-cue-alert-value='']"
+    @waiter.assert_select "#opponent.strip.active"
+    @waiter.assert_select ".turn-tag", false
+    @waiter.assert_select "title", "CatDog"
+  end
+
   test "drawing shows both faces of both drawn tiles to the mover and the tiles to the opponent" do
     post_move(@mover, kind: "draw")
     @mover.follow_redirect!
@@ -178,6 +192,9 @@ class GamePageTest < ActionDispatch::IntegrationTest
     assert_equal "resign", @game.moves.last.kind
     @waiter.follow_redirect!
     @waiter.assert_select "#status", "Opponent won. You resigned."
+    @waiter.assert_select "#status.mine", false
+    @waiter.assert_select ".strip.active", false
+    @waiter.assert_select "title", "CatDog"
     @waiter.assert_select "#resign", false
   end
 

@@ -74,6 +74,8 @@
 
 **Guest**: A player with no account. A guest plays through seat tokens only.
 
+**Display name**: The name of an account that the opponent sees in an online game. It is not unique, and the player can change it at any time; the new name shows in old games too. A player sees their own seat as "You". A seat with no account shows as "Guest".
+
 **Statistics**: Totals about an account's finished online games: games played, wins, losses, draws, points per scored game, best game, longest animal and species played. Each game is a win, a loss or a draw; a resign is counted inside the win or the loss. Points per scored game leave out resigned games. The longest animal is the longest complete animal of the account's own species. Hot-seat games are not counted.
 
 **Settings**: Art style, cat colour, dog colour and auto-draw. A guest's settings live in one browser. An account's settings live on the account and follow it to every device. At sign-in, the account's settings replace the browser's; a new account takes the browser's settings.

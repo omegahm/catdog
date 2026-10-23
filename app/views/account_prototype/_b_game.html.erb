@@ -1,0 +1,7 @@
+<main class="page game">
+  <header class="game-header">
+    <h1><a href="?<%= request.query_parameters.merge(page: "home").to_query %>">CatDog</a></h1>
+    <span class="row"><details class="settings"><summary>Settings</summary></details><%= render "b_pill" %></span>
+  </header>
+  <%= render "game_body" %>
+</main>

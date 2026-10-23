@@ -1,0 +1,17 @@
+<% pg = ->(p) { "?" + request.query_parameters.merge(page: p).to_query } %>
+<% if @no_passkeys && !@signed_in %>
+  <span class="proto-muted">Playing as a guest</span>
+<% elsif @signed_in %>
+  <details class="proto-menu">
+    <summary><%= @name %> ▾</summary>
+    <nav>
+      <a href="<%= pg.("home") %>#your-games">Your games</a>
+      <a href="/prototype/stats">Your statistics</a>
+      <a href="<%= pg.("account") %>">Account</a>
+      <hr>
+      <a href="#">Sign out</a>
+    </nav>
+  </details>
+<% else %>
+  <span class="row"><a href="#">Sign in</a><a class="button" href="<%= pg.("signup") %>">Create account</a></span>
+<% end %>

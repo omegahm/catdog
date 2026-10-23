@@ -1,0 +1,6 @@
+<% pg = ->(p) { "?" + request.query_parameters.merge(page: p).to_query } %>
+<% if @signed_in %>
+  <a class="proto-pill" href="<%= pg.("account") %>"><%= @name %></a>
+<% elsif !@no_passkeys %>
+  <a class="proto-pill" href="<%= pg.("signup") %>">Sign in</a>
+<% end %>

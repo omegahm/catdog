@@ -1,0 +1,8 @@
+<main class="page">
+  <header class="game-header"><h1><a href="?<%= request.query_parameters.merge(page: "home").to_query %>">CatDog</a></h1><%= render "a_menu" %></header>
+  <h2 class="proto-h2">Account</h2>
+  <section class="card"><h2>Display name</h2><%= render "name_form" %></section>
+  <section class="card"><h2>Passkeys</h2><%= render "passkeys" %></section>
+  <section class="card"><h2>Settings</h2><p class="proto-muted">Art style, colours and auto-draw: change them in "Settings" on any game page. They are saved to your account.</p></section>
+  <%= render "danger" %>
+</main>

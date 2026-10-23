@@ -1,0 +1,11 @@
+<main class="page">
+  <header class="game-header"><h1><a href="?<%= request.query_parameters.merge(page: "home").to_query %>">CatDog</a></h1></header>
+  <section class="card">
+    <h2>Create an account</h2>
+    <p class="lede">An account keeps your settings and statistics, and opens your games on any device. No email, no password: you sign in with a passkey.</p>
+    <label class="proto-field">Display name<input placeholder="The name your opponent sees" maxlength="20"></label>
+    <a href="#" class="button primary">Create passkey</a>
+    <p class="proto-muted">Your games in this browser move to the new account. Your current settings become the account's settings.</p>
+    <p class="proto-muted">Already have an account? <a href="#">Sign in with a passkey</a></p>
+  </section>
+</main>

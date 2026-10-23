@@ -1,0 +1,26 @@
+<% pg = ->(p) { "?" + request.query_parameters.merge(page: p).to_query } %>
+<% if @signed_in %>
+  <main class="page proto-hub">
+    <header class="game-header"><h1>CatDog</h1><span class="proto-muted">Hi, <%= @name %></span></header>
+    <a class="button primary big">New game</a>
+    <section><h2 class="proto-h2">Your games</h2><%= render "games_list" %></section>
+    <a class="card proto-stat-strip" href="/prototype/stats">
+      <span><strong><%= @stats[:played] %></strong> games played</span>
+      <span class="proto-bar"><span class="win" style="flex:<%= @stats[:won] %>"></span><span class="draw" style="flex:<%= @stats[:drawn] %>"></span><span class="loss" style="flex:<%= @stats[:lost] %>"></span></span>
+      <span>Your statistics →</span>
+    </a>
+    <footer class="footer row"><a href="<%= pg.("account") %>">Account</a><a href="#">Sign out</a><a href="#">How to play</a></footer>
+  </main>
+<% else %>
+  <main class="landing proto-landing">
+    <%= render "hero" do %>
+      <% if @no_passkeys %><%= render "no_passkey_note" %><% else %>
+        <div class="card proto-signin">
+          <strong>Already playing on another device?</strong>
+          <a class="button">Sign in with a passkey</a>
+          <small><a href="<%= pg.("signup") %>">Create an account</a> to keep statistics and open your games anywhere.</small>
+        </div>
+      <% end %>
+    <% end %>
+  </main>
+<% end %>

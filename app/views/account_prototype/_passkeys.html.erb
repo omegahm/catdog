@@ -1,0 +1,10 @@
+<ul class="proto-list">
+  <% @passkeys.each do |p| %>
+    <li>
+      <span><strong><%= p.name %></strong><br><small>Added <%= p.created %> · last used <%= p.last_used %></small></span>
+      <span class="row"><a href="#" class="button">Rename</a><% if @passkeys.size > 1 %><a href="#" class="button danger">Remove</a><% end %></span>
+    </li>
+  <% end %>
+</ul>
+<a href="#" class="button">Add a passkey</a>
+<p class="proto-muted">Add a second passkey (for example, your phone) so that you can still sign in if you lose a device. You cannot remove the last passkey.</p>

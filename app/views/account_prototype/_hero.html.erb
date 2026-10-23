@@ -1,0 +1,27 @@
+<% cells = demo_cells %>
+<% tiles = Rules::TileSet.cached %>
+<% content_for :head, demo_keyframes(cells) %>
+<section class="hero">
+  <div class="hero-text">
+    <h1>CatDog</h1>
+    <p class="pitch">Lay tiles. Grow cats and dogs. Own the most lengths.</p>
+    <div class="cta">
+      <a class="button primary big">New game</a>
+      <p class="note">Two players, two devices. Send the link to a friend.</p>
+      <%= yield %>
+    </div>
+  </div>
+  <figure class="demo">
+    <div class="demo-board" style="--cols: <%= HomeHelper::DEMO_COLS.count %>; --cycle: <%= HomeHelper::DEMO_CYCLE %>s">
+      <% HomeHelper::DEMO_ROWS.each do |row| %>
+        <% HomeHelper::DEMO_COLS.each do |col| %>
+          <% cell = cells[[ row, col ]] %>
+          <div class="demo-cell"<% if cell %> style="--tile-anim: demo-tile-<%= cell.step %>"<% end %>>
+            <%= tile_face(tiles, cell.placement.tile_id, cell.placement.face, rotation: cell.placement.rotation) if cell %>
+          </div>
+        <% end %>
+      <% end %>
+    </div>
+  </figure>
+</section>
+<section class="how"><h2>How to play</h2><p class="proto-muted">(three steps and the rules link, as today)</p></section>

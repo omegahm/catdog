@@ -1,0 +1,11 @@
+<main class="landing proto-landing">
+  <div class="proto-topbar"><span></span><%= render "a_menu" %></div>
+  <%= render "hero" do %>
+    <% if @signed_in %>
+      <section id="your-games" class="proto-inline-games">
+        <h3>Your games</h3>
+        <%= render "games_list" %>
+      </section>
+    <% end %>
+  <% end %>
+</main>

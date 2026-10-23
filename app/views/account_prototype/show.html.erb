@@ -1,0 +1,14 @@
+<% content_for :title, "PROTOTYPE · Account UI" %>
+<% q = ->(h) { "?" + request.query_parameters.merge(h).compact.to_query } %>
+<div class="proto-flag">
+  PROTOTYPE — <%= @variant %> (<%= @variants[@variant] %>) · fake data ·
+  page:
+  <% AccountPrototypeController::PAGES.each do |key, label| %>
+    <% if key == @page %><strong><%= label %></strong><% else %><a href="<%= q.(page: key) %>"><%= label %></a><% end %>
+  <% end %>
+  · <a href="<%= q.(as: @signed_in ? "guest" : nil) %>"><%= @signed_in ? "view as guest" : "view as account" %></a>
+  · <a href="<%= q.(nogames: params[:nogames] ? nil : 1) %>"><%= params[:nogames] ? "with open games" : "no open games" %></a>
+  · <a href="<%= q.(nopasskeys: params[:nopasskeys] ? nil : 1) %>"><%= params[:nopasskeys] ? "passkey browser" : "no-passkey browser" %></a>
+</div>
+<%= render(lookup_context.exists?("#{@variant.downcase}_#{@page}", ["account_prototype"], true) ? "#{@variant.downcase}_#{@page}" : "shared_#{@page}") %>
+<%= render "switcher" %>

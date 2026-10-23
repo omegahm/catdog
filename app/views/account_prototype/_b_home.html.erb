@@ -1,0 +1,13 @@
+<main class="landing proto-landing">
+  <div class="proto-topbar"><span></span><%= render "b_pill" %></div>
+  <% if @signed_in && @games.any?(&:your_turn) %>
+    <a class="banner proto-banner" href="?<%= request.query_parameters.merge(page: "account").to_query %>">It is your turn in <%= @games.count(&:your_turn) %> game. Open your games →</a>
+  <% end %>
+  <%= render "hero" do %>
+    <% if !@signed_in %>
+      <% if @no_passkeys %><%= render "no_passkey_note" %><% else %>
+        <p class="note">Play on more devices and keep statistics: <a href="#">Sign in</a> or <a href="?<%= request.query_parameters.merge(page: "signup").to_query %>">create an account</a>. Optional.</p>
+      <% end %>
+    <% end %>
+  <% end %>
+</main>

@@ -1,0 +1,14 @@
+<% if @games.empty? %>
+  <p class="proto-muted">No open games. <a href="#">New game</a></p>
+<% else %>
+  <ul class="proto-games">
+    <% @games.each do |g| %>
+      <li class="<%= "turn" if g.your_turn %>">
+        <a href="?<%= request.query_parameters.merge(page: "game").to_query %>">
+          <strong><%= g.opponent ? "vs #{g.opponent}" : "Invite not opened yet" %></strong>
+          <span><%= g.state == "lobby" ? "Waiting for a friend to join" : (g.your_turn ? "Your turn" : "#{g.opponent}#{g.opponent.end_with?("s") ? "'" : "'s"} turn") %> · <%= g.ago %></span>
+        </a>
+      </li>
+    <% end %>
+  </ul>
+<% end %>
